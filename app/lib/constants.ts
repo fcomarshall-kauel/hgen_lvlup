@@ -24,8 +24,40 @@ export const AVATARS = [
     name: "Angelina",
   },
 
- 
+
 ];
+
+
+export const VOICES = [
+  {
+    name: "Pablo (Chile)",
+    voice_id: "05e192129b6b466493886273f8c23f78", // Pablo's voice ID
+    preview_url: "/pablo.mp3"
+  },
+  {
+    name: "Fernanda (Chile)",
+    voice_id: "55c3fee66bdf441eba6c065f64f64306", // Fernanda's voice ID
+    preview_url: "/fernanda.mp3"
+  },
+  // Add more avatars as needed
+];
+
+export const SIMULATIONS = [
+  {
+    situacion: "Simulación de Despido",
+    knowledgeId: "6368e34cc3f648eeb38bcb231b902e48",
+  },
+  {
+    situacion: "Onboarding",
+    knowledgeId: "another_knowledge_id_here",
+  },
+  // Add more situations as needed
+];
+
+
+
+
+
 
 export const STT_LANGUAGE_LIST = [
   { label: 'Bulgarian', value: 'bg', key: 'bg' },

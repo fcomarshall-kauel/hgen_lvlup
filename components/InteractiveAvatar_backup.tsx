@@ -1,4 +1,6 @@
 import type { StartAvatarResponse } from "@heygen/streaming-avatar";
+import { Avatar_OPT,Situaciones_OPT } from "./AvatarConfig";
+
 import StreamingAvatar, {
   AvatarQuality,
   StreamingEvents, TaskMode, TaskType, VoiceEmotion,
@@ -22,7 +24,7 @@ import { useMemoizedFn, usePrevious } from "ahooks";
 
 import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 
-import {AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES} from "@/app/lib/constants";
+import {AVATARS, STT_LANGUAGE_LIST} from "@/app/lib/constants";
 
 export default function InteractiveAvatar() {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
@@ -31,9 +33,8 @@ export default function InteractiveAvatar() {
   const [debug, setDebug] = useState<string>();
   const [knowledgeId, setKnowledgeId] = useState<string>("");
   const [avatarId, setAvatarId] = useState<string>("");
-  const [language, setLanguage] = useState<string>('es');
-  const [voiceId, setVoiceId] = useState("");
-  const [audioPreview, setAudioPreview] = useState<HTMLAudioElement | null>(null);
+  const [language, setLanguage] = useState<string>('en');
+  const [voice, setVoice] = useState("");
 
   const [data, setData] = useState<StartAvatarResponse>();
   const [text, setText] = useState<string>("");
@@ -42,6 +43,24 @@ export default function InteractiveAvatar() {
   const [chatMode, setChatMode] = useState("text_mode");
   const [isUserTalking, setIsUserTalking] = useState(false);
 
+  const handleAvatarChange = (selectedId:string) => {
+    const selectedAvatar = Avatar_OPT.find(
+      (avatar) => avatar.avatarId === selectedId
+    );
+    if (selectedAvatar) {
+      setAvatarId(selectedAvatar.avatarId);
+      setVoice(selectedAvatar.voice);
+    }
+  };
+
+  const handleSituationChange = (selectedId:string) => {
+    const selectedSituation = Situaciones_OPT.find(
+      (situation) => situation.knowledgeId === selectedId
+    );
+    if (selectedSituation) {
+      setKnowledgeId(selectedSituation.knowledgeId);
+    }
+  };
 
   async function fetchAccessToken() {
     try {
@@ -93,9 +112,12 @@ export default function InteractiveAvatar() {
       const res = await avatar.current.createStartAvatar({
         quality: AvatarQuality.Low,
         avatarName: avatarId,
-        knowledgeId: knowledgeId, 
+        knowledgeId: knowledgeId, // Simulación de despido : 6368e34cc3f648eeb38bcb231b902e48
         voice: {
-          voiceId: voiceId,
+          //voces 11l 
+          //pablo_chile : 05e192129b6b466493886273f8c23f78
+          //fernanda_chile: 55c3fee66bdf441eba6c065f64f64306
+          voiceId: "55c3fee66bdf441eba6c065f64f64306",
           rate: 1, // 0.5 ~ 1.5
           emotion: VoiceEmotion.EXCITED,
         },
@@ -179,8 +201,6 @@ export default function InteractiveAvatar() {
     }
   }, [mediaStream, stream]);
 
-  
-
   return (
     <div className="w-full flex flex-col gap-4">
       <Card>
@@ -225,9 +245,35 @@ export default function InteractiveAvatar() {
                   Selecciona Avatar
                 </p>
                 <Select
-                  label="Seleccione Avatar"
-                  size="md"
+                  onChange={(e) => handleAvatarChange(e.target.value)}
+                  aria-label="Select an avatar"
+                >
+                  {Avatar_OPT.map((avatar) => (
+                    <SelectItem key={avatar.avatarId} value={avatar.avatarId}>
+                      {avatar.name}
+                    </SelectItem>
+                  ))}
+                </Select>
                 
+                <p className="text-sm font-medium leading-none">
+                  Custom Knowledge ID (optional)
+                </p>
+                <Input
+                  placeholder="Enter a custom knowledge ID"
+                  value={knowledgeId}
+                  onChange={(e) => setKnowledgeId(e.target.value)}
+                />
+                <p className="text-sm font-medium leading-none">
+                  Custom Avatar ID (optional)
+                </p>
+                <Input
+                  placeholder="Enter a custom avatar ID"
+                  value={avatarId}
+                  onChange={(e) => setAvatarId(e.target.value)}
+                />
+                <Select
+                  placeholder="Or select one from these example avatars"
+                  size="md"
                   onChange={(e) => {
                     setAvatarId(e.target.value);
                   }}
@@ -235,69 +281,28 @@ export default function InteractiveAvatar() {
                   {AVATARS.map((avatar) => (
                     <SelectItem
                       key={avatar.avatar_id}
-                      textValue={avatar.name}
-                      value={avatar.avatar_id}
+                      textValue={avatar.avatar_id}
                     >
                       {avatar.name}
                     </SelectItem>
                   ))}
                 </Select>
-                <p className="text-sm font-medium leading-none">
-                  Voz y Acento
-                </p>
+
                 <Select
-                  label="Voz y Acento"
-                  size="md"
+                  label="Select language"
+                  placeholder="Select language"
+                  className="max-w-xs"
+                  selectedKeys={[language]}
                   onChange={(e) => {
-                    setVoiceId(e.target.value);
-                    const selectedVoice = VOICES.find(voice => voice.voice_id === e.target.value);
-                    if (selectedVoice?.preview_url) {
-                      if (audioPreview) {
-                        audioPreview.pause();
-                      }
-                      const audio = new Audio(selectedVoice.preview_url);
-                      setAudioPreview(audio);
-                      audio.play();
-                    }
+                    setLanguage(e.target.value);
                   }}
                 >
-                  {VOICES.map((voice) => (
-                    <SelectItem
-                      key={voice.voice_id}
-                      textValue={voice.name}
-                      value={voice.voice_id}
-                    >
-                      {voice.name}
+                  {STT_LANGUAGE_LIST.map((lang) => (
+                    <SelectItem key={lang.key}>
+                      {lang.label}
                     </SelectItem>
                   ))}
                 </Select>
-                <p className="text-sm font-medium leading-none">
-                 Situación 
-                </p>
-                <Select
-                  label="Situación"
-                  size="md"
-                  onChange={(e) => {
-                    setKnowledgeId(e.target.value);
-                  }}
-                >
-                  {SIMULATIONS.map((situation) => (
-                    <SelectItem
-                      key={situation.knowledgeId}
-                      textValue={situation.situacion}
-                      value={situation.knowledgeId}
-                    >
-                      {situation.situacion}
-                    </SelectItem>
-                  ))}
-                </Select>
-
-
-
-
-
-
- 
               </div>
               <Button
                 className="bg-gradient-to-tr from-indigo-500 to-indigo-300 w-full text-white"

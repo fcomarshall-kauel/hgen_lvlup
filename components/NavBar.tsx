@@ -17,9 +17,9 @@ export default function NavBar() {
         <Link isExternal aria-label="HeyGen" href="https://app.heygen.com/">
           <HeyGenLogo />
         </Link>
-        <div className="bg-gradient-to-br from-sky-300 to-indigo-500 bg-clip-text ml-4">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-300 bg-clip-text ml-4">
           <p className="text-xl font-semibold text-transparent">
-            HeyGen Interactive Avatar SDK NextJS Demo
+            Level|Up - Simulación Conversacional 
           </p>
         </div>
       </NavbarBrand>

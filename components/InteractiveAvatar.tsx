@@ -41,6 +41,7 @@ export default function InteractiveAvatar() {
   const avatar = useRef<StreamingAvatar | null>(null);
   const [chatMode, setChatMode] = useState("text_mode");
   const [isUserTalking, setIsUserTalking] = useState(false);
+  const [isPushToTalkActive, setIsPushToTalkActive] = useState(false);
 
 
   async function fetchAccessToken() {
@@ -179,7 +180,19 @@ export default function InteractiveAvatar() {
     }
   }, [mediaStream, stream]);
 
-  
+  const handlePushToTalkStart = async () => {
+    if (avatar.current && chatMode === "voice_mode") {
+      await avatar.current.startListening();
+      setIsPushToTalkActive(true);
+    }
+  };
+
+  const handlePushToTalkEnd = async () => {
+    if (avatar.current && chatMode === "voice_mode") {
+      await avatar.current.stopListening();
+      setIsPushToTalkActive(false);
+    }
+  };
 
   return (
     <div className="w-full flex flex-col gap-4">
@@ -342,12 +355,14 @@ export default function InteractiveAvatar() {
           ) : (
             <div className="w-full text-center">
               <Button
-                isDisabled={!isUserTalking}
                 className="bg-gradient-to-tr from-indigo-500 to-indigo-300 text-white"
                 size="md"
                 variant="shadow"
+                onMouseDown={handlePushToTalkStart}
+                onMouseUp={handlePushToTalkEnd}
+                onMouseLeave={handlePushToTalkEnd}
               >
-                {isUserTalking ? "Listening" : "Voice chat"}
+                {isPushToTalkActive ? "Listening..." : "Hold to Talk"}
               </Button>
             </div>
           )}

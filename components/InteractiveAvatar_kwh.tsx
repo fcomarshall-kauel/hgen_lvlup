@@ -44,7 +44,6 @@ interface Source {
 
 export default function InteractiveAvatar() {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
-  const [isLoadingRepeat, setIsLoadingRepeat] = useState(false);
   const [stream, setStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
   const [knowledgeId, setKnowledgeId] = useState<string>("");
@@ -61,7 +60,7 @@ export default function InteractiveAvatar() {
   const [isUserTalking, setIsUserTalking] = useState(false);
   const [isPushToTalkActive, setIsPushToTalkActive] = useState(false);
   const [sourceDocs, setSourceDocs] = useState<string[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
+  const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'processing'>('idle');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
@@ -125,31 +124,24 @@ export default function InteractiveAvatar() {
     }
   }
   async function handleSpeak(inputText?: string) {
-    console.log('handleSpeak called with inputText:', inputText);
-    
     if (!avatar.current) {
       setDebug("Avatar API not initialized");
       return;
     }
 
-    const textToSend = inputText || text;
-    console.log('Text to send to API:', textToSend);
-
-    if (!textToSend?.trim()) {
+    const textToSend = inputText?.trim() || text.trim();
+    if (!textToSend) {
       setDebug("Empty input text");
       return;
     }
 
     try {
-      setIsLoadingRepeat(true);
+      setRecordingState('processing');
       const startTime = performance.now();
-      const apiStartTime = performance.now();
       
       const aiResponse = await fetch("/api/ai-chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: textToSend,
           knowledge_id: knowledgeId
@@ -157,48 +149,41 @@ export default function InteractiveAvatar() {
       });
 
       const aiResponseData = await aiResponse.json() as ChatResponse;
-      const apiEndTime = performance.now();
+      const aiTime = performance.now() - startTime;
       
-      console.log('AI API Response:', aiResponseData);
-
+      console.log(`AI Response (${aiTime.toFixed(0)}ms):`, aiResponseData.answer);
+      console.log('Full API Response:', {
+        full_response: aiResponseData,
+        sources: aiResponseData.context
+      });
+      
       if (!aiResponseData.answer) {
         throw new Error('No AI response found');
       }
 
-      const uniqueFiles = aiResponseData.context
-        .map(ctx => ctx.metadata.filename)
-        .filter((filename, index, self) => 
-          filename && self.indexOf(filename) === index
-        );
-
+      // Process source documents
+      const uniqueFiles = Array.from(new Set(
+        aiResponseData.context
+          .map(ctx => ctx.metadata.filename)
+          .filter(Boolean)
+      ));
       setSourceDocs(uniqueFiles);
 
-      console.log(`[${new Date().toISOString()}] Starting avatar speech...`);
-      const speakStartTime = performance.now();
-
-      // Only use REPEAT mode
-      const speakRequest: SpeakRequest = {
+      // Speak the response
+      const avatarStartTime = performance.now();
+      await avatar.current.speak({
         text: aiResponseData.answer,
         taskType: TaskType.REPEAT,
         taskMode: TaskMode.SYNC
-      };
-
-      await avatar.current.speak(speakRequest);
-      
-      const speakEndTime = performance.now();
-      
-      console.log(`
-        Timing Breakdown:
-        - Total time: ${(speakEndTime - startTime).toFixed(2)}ms
-        - API request time: ${(apiEndTime - apiStartTime).toFixed(2)}ms
-        - Avatar preparation and speech start time: ${(speakEndTime - speakStartTime).toFixed(2)}ms
-      `);
+      });
+      const avatarTime = performance.now() - avatarStartTime;
+      console.log(`Avatar speaking time: ${avatarTime.toFixed(0)}ms`);
 
     } catch (error) {
       console.error("Error:", error);
       setDebug(error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
-      setIsLoadingRepeat(false);
+      setRecordingState('idle');
     }
   }
   async function handleInterrupt() {
@@ -264,55 +249,41 @@ export default function InteractiveAvatar() {
   };
 
   const startRecording = async () => {
-    console.log('Starting recording...', new Date().toISOString());
     try {
-      console.log('Before getUserMedia');
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true,
-        video: false 
-      });
-      console.log('After getUserMedia - success');
-      
+      setRecordingState('recording');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = getSupportedMimeType();
-      console.log('Creating MediaRecorder with MIME type:', mimeType);
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      console.log('MediaRecorder created');
       
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        console.log('Data available:', event.data.size);
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.start();
-      setIsRecording(true);
-      console.log('Recording started');
     } catch (error) {
-      console.error('Error starting recording:', error);
-      setDebug('Failed to start recording: ' + (error instanceof Error ? error.message : String(error)));
+      setRecordingState('idle');
+      setDebug('Recording failed: ' + (error instanceof Error ? error.message : String(error)));
     }
   };
 
   const stopRecording = () => {
-    console.log('Stopping recording...');
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.onstop = async () => {
-        console.log('Creating audio blob from chunks');
-        const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        console.log('Blob created, size:', audioBlob.size, 'type:', mimeType);
-        await handleWhisperTranscription(audioBlob);
-      };
-      
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      console.log('Recording stopped');
-    }
+    const mediaRecorder = mediaRecorderRef.current;
+    if (!mediaRecorder || recordingState !== 'recording') return;
+
+    setRecordingState('processing');
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
+      await handleWhisperTranscription(audioBlob);
+      setRecordingState('idle');
+    };
+    
+    mediaRecorder.stop();
+    mediaRecorder.stream.getTracks().forEach(track => track.stop());
   };
 
   const handleWhisperTranscription = async (audioBlob: Blob) => {
@@ -320,7 +291,8 @@ export default function InteractiveAvatar() {
     formData.append('audio', audioBlob, 'recording.webm');
 
     try {
-      setIsLoadingRepeat(true);
+      setRecordingState('processing');
+      const startTime = performance.now();
       console.log('Sending audio for transcription, size:', audioBlob.size, 'type:', audioBlob.type);
       const response = await fetch('/api/transcribe', {
         method: 'POST',
@@ -328,6 +300,9 @@ export default function InteractiveAvatar() {
       });
 
       const { text: transcription } = await response.json();
+      const whisperTime = performance.now() - startTime;
+      console.log(`Whisper transcription (${whisperTime.toFixed(0)}ms):`, transcription);
+      
       setText(transcription);
       if (transcription) {
         await handleSpeak(transcription);
@@ -335,6 +310,8 @@ export default function InteractiveAvatar() {
     } catch (error) {
       console.error('Transcription error:', error);
       setDebug('Transcription failed');
+    } finally {
+      setRecordingState('idle');
     }
   };
 
@@ -373,8 +350,8 @@ export default function InteractiveAvatar() {
             <div className="h-full justify-center items-center flex flex-col gap-8 w-[500px] self-center">
               <div className="flex flex-col gap-3 w-full">
                 <Select
-                  label="Select Avatar"
-                  placeholder="Select an avatar"
+                  label="Selección de Agente"
+                  placeholder="Seleccione un agente"
                   selectedKeys={avatarId ? [avatarId] : []}
                   onChange={(e) => setAvatarId(e.target.value)}
                 >
@@ -403,7 +380,7 @@ export default function InteractiveAvatar() {
                 variant="shadow"
                 onClick={startSession}
               >
-                Start session
+                Iniciar Conversación
               </Button>
             </div>
           ) : (
@@ -419,29 +396,31 @@ export default function InteractiveAvatar() {
                   disabled={!stream}
                   input={text}
                   label="Chat"
-                  loading={isLoadingRepeat}
-                  placeholder="Type something for the avatar to respond"
+                  loading={recordingState === 'processing'}
+                  placeholder="Escriba algo para que el avatar responda"
                   setInput={setText}
                   onSubmit={handleSpeak}
                 />
                 <Button
-                  className={`ml-2 ${isRecording ? 'bg-red-500' : 'bg-blue-500'} text-white rounded-lg`}
+                  className={`ml-2 ${
+                    recordingState === 'recording' 
+                      ? 'bg-red-500' 
+                      : recordingState === 'processing' 
+                        ? 'bg-yellow-500' 
+                        : 'bg-blue-500'
+                  } text-white rounded-lg`}
                   size="md"
                   variant="shadow"
-                  onPointerDown={() => {
-                    console.log('Button pressed');
-                    startRecording();
-                  }}
-                  onPointerUp={() => {
-                    console.log('Button released');
-                    stopRecording();
-                  }}
-                  onPointerLeave={() => {
-                    console.log('Button left');
-                    stopRecording();
-                  }}
+                  isDisabled={recordingState === 'processing'}
+                  onPointerDown={startRecording}
+                  onPointerUp={stopRecording}
+                  onPointerLeave={stopRecording}
                 >
-                  Hold to Speak
+                  {recordingState === 'recording' 
+                    ? 'Escuchando...' 
+                    : recordingState === 'processing' 
+                      ? 'Procesando...' 
+                      : 'Mantener para hablar'}
                 </Button>
               </div>
               
@@ -460,16 +439,11 @@ export default function InteractiveAvatar() {
             </div>
           ) : (
             <div className="text-center text-gray-500 text-sm">
-              Start a session to begin chatting
+              Inicie una conversación para comenzar a hablar
             </div>
           )}
         </CardFooter>
       </Card>
-      <p className="font-mono text-right">
-        <span className="font-bold">Console:</span>
-        <br />
-        {debug}
-      </p>
     </div>
   );
 }

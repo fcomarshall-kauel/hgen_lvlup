@@ -124,37 +124,43 @@ export default function InteractiveAvatar() {
       setIsLoadingSession(false);
     }
   }
-  async function handleSpeak() {
-    const startTime = performance.now();
-    console.log(`[${new Date().toISOString()}] Starting request...`);
-    
-    setIsLoadingRepeat(true);
-    setSourceDocs([]);
+  async function handleSpeak(inputText?: string) {
+    console.log('handleSpeak called with inputText:', inputText);
     
     if (!avatar.current) {
       setDebug("Avatar API not initialized");
       return;
     }
 
+    const textToSend = inputText || text;
+    console.log('Text to send to API:', textToSend);
+
+    if (!textToSend?.trim()) {
+      setDebug("Empty input text");
+      return;
+    }
+
     try {
+      setIsLoadingRepeat(true);
+      const startTime = performance.now();
       const apiStartTime = performance.now();
-      console.log(`[${new Date().toISOString()}] Sending request to AI API...`);
       
-      const aiResponse = await fetch('/api/ai-chat', {
-        method: 'POST',
+      const aiResponse = await fetch("/api/ai-chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({
+          message: textToSend,
+          knowledge_id: knowledgeId
+        }),
       });
-      
+
       const aiResponseData = await aiResponse.json() as ChatResponse;
-      
-      console.log('Full API Response:', aiResponseData);
-      
       const apiEndTime = performance.now();
-      console.log(`[${new Date().toISOString()}] AI API response received in ${(apiEndTime - apiStartTime).toFixed(2)}ms`);
       
+      console.log('AI API Response:', aiResponseData);
+
       if (!aiResponseData.answer) {
         throw new Error('No AI response found');
       }
@@ -188,7 +194,7 @@ export default function InteractiveAvatar() {
         - Avatar preparation and speech start time: ${(speakEndTime - speakStartTime).toFixed(2)}ms
       `);
 
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Error:", error);
       setDebug(error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
@@ -323,7 +329,9 @@ export default function InteractiveAvatar() {
 
       const { text: transcription } = await response.json();
       setText(transcription);
-      await handleSpeak();
+      if (transcription) {
+        await handleSpeak(transcription);
+      }
     } catch (error) {
       console.error('Transcription error:', error);
       setDebug('Transcription failed');

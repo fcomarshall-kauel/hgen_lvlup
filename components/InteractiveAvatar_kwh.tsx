@@ -22,7 +22,7 @@ import { useMemoizedFn, usePrevious } from "ahooks";
 
 import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 
-import {AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES} from "@/app/lib/constants";
+import {AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES, AVATAR_VOICE_COMBINATIONS} from "@/app/lib/constants";
 
 // Define the response type
 interface ChatResponse {
@@ -110,13 +110,20 @@ export default function InteractiveAvatar() {
         voice: {
           voiceId: voiceId,
           rate: 1,
-          emotion: VoiceEmotion.EXCITED,
+          emotion: VoiceEmotion.FRIENDLY,
         },
-        language: language,
+        language: 'es',
       });
 
       setData(res);
       setChatMode("text_mode");
+
+      // Direct greeting without AI processing
+      await avatar.current.speak({
+        text: "Es un placer darle la bienvenida. Estoy aquí para ayudarle con consultas médicas, recursos sobre productos farmacéuticos, y las últimas publicaciones en su campo. Además, si tiene alguna pregunta específica sobre el tratamiento de sus pacientes, estaré encantada de asistirle.",
+        taskType: TaskType.REPEAT,
+        taskMode: TaskMode.SYNC
+      });
     } catch (error) {
       console.error("Error starting avatar session:", error);
     } finally {
@@ -143,7 +150,7 @@ export default function InteractiveAvatar() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: textToSend,
+          message: `responde en 30 palabras o menos: ${textToSend}`,
           knowledge_id: knowledgeId
         }),
       });
@@ -315,6 +322,14 @@ export default function InteractiveAvatar() {
     }
   };
 
+  const handleCombinationChange = (value: string) => {
+    const combination = AVATAR_VOICE_COMBINATIONS.find(c => c.id === value);
+    if (combination) {
+      setAvatarId(combination.avatar_id);
+      setVoiceId(combination.voice_id);
+    }
+  };
+
   return (
     <div className="w-full flex flex-col gap-4">
       <Card className="max-w-[1000px]">
@@ -334,7 +349,7 @@ export default function InteractiveAvatar() {
                   variant="shadow"
                   onClick={handleInterrupt}
                 >
-                  Interrupt task
+                  Interrumpir
                 </Button>
                 <Button
                   className="bg-gradient-to-tr from-indigo-500 to-indigo-300 text-white rounded-lg"
@@ -342,7 +357,7 @@ export default function InteractiveAvatar() {
                   variant="shadow"
                   onClick={endSession}
                 >
-                  End session
+                  Terminar Sesión
                 </Button>
               </div>
             </div>
@@ -350,26 +365,18 @@ export default function InteractiveAvatar() {
             <div className="h-full justify-center items-center flex flex-col gap-8 w-[500px] self-center">
               <div className="flex flex-col gap-3 w-full">
                 <Select
-                  label="Selección de Agente"
+                  label="Selección de Agente y Voz"
                   placeholder="Seleccione un agente"
-                  selectedKeys={avatarId ? [avatarId] : []}
-                  onChange={(e) => setAvatarId(e.target.value)}
+                  variant="bordered"
+                  disallowEmptySelection={false}
+                  selectedKeys={new Set([AVATAR_VOICE_COMBINATIONS.find(c => 
+                    c.avatar_id === avatarId && c.voice_id === voiceId
+                  )?.id || ""])}
+                  onSelectionChange={(keys) => handleCombinationChange(Array.from(keys)[0] as string)}
                 >
-                  {AVATARS.map((avatar) => (
-                    <SelectItem key={avatar.avatar_id} value={avatar.avatar_id}>
-                      {avatar.name}
-                    </SelectItem>
-                  ))}
-                </Select>
-                <Select
-                  label="Select Voice"
-                  placeholder="Select a voice"
-                  selectedKeys={voiceId ? [voiceId] : []}
-                  onChange={(e) => setVoiceId(e.target.value)}
-                >
-                  {VOICES.map((voice) => (
-                    <SelectItem key={voice.voice_id} value={voice.voice_id}>
-                      {voice.name}
+                  {AVATAR_VOICE_COMBINATIONS.map((combo) => (
+                    <SelectItem key={combo.id} value={combo.id}>
+                      {combo.name}
                     </SelectItem>
                   ))}
                 </Select>
@@ -426,7 +433,7 @@ export default function InteractiveAvatar() {
               
               {sourceDocs.length > 0 && (
                 <div className="text-sm text-gray-500">
-                  <p className="font-medium">Sources:</p>
+                  <p className="font-medium">Fuentes:</p>
                   <ul className="list-disc pl-5">
                     {sourceDocs.map((filename, index) => (
                       <li key={index} className="text-xs">

@@ -1,5 +1,5 @@
 import { Input, Spinner, Tooltip } from "@nextui-org/react";
-import { Airplane, ArrowRight, PaperPlaneRight } from "@phosphor-icons/react";
+import { Send } from "lucide-react"; // Reemplazo de PaperPlaneRight
 import clsx from "clsx";
 
 interface StreamingAvatarTextInputProps {
@@ -49,7 +49,7 @@ export default function InteractiveAvatarTextInput({
                 className="focus:outline-none"
                 onClick={handleSubmit}
               >
-                <PaperPlaneRight
+                <Send
                   className={clsx(
                     "text-indigo-300 hover:text-indigo-200",
                     disabled && "opacity-50"

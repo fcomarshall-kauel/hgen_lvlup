@@ -120,7 +120,7 @@ export default function InteractiveAvatar() {
 
       // Direct greeting without AI processing
       await avatar.current.speak({
-        text: "Es un placer darle la bienvenida. Estoy aquí para ayudarle con consultas médicas, recursos sobre productos farmacéuticos, y las últimas publicaciones en su campo. Además, si tiene alguna pregunta específica sobre el tratamiento de sus pacientes, estaré encantada de asistirle.",
+        text: "Es un placer darle la bienvenida. Estoy aquí para sus consultas médicas, recursos sobre productos farmacéuticos, y las últimas publicaciones en su campo. Además, si tiene alguna pregunta específica sobre el tratamiento de sus pacientes, estaré encantada de asistirle.",
         taskType: TaskType.REPEAT,
         taskMode: TaskMode.SYNC
       });
@@ -358,9 +358,13 @@ export default function InteractiveAvatar() {
                   placeholder="Seleccione un agente"
                   variant="bordered"
                   disallowEmptySelection={false}
-                  selectedKeys={new Set([AVATAR_VOICE_COMBINATIONS.find(c => 
-                    c.avatar_id === avatarId && c.voice_id === voiceId
-                  )?.id || ""])}
+                  selectedKeys={new Set(
+                    [
+                      avatarId && voiceId
+                        ? AVATAR_VOICE_COMBINATIONS.find(c => c.avatar_id === avatarId && c.voice_id === voiceId)?.id || AVATAR_VOICE_COMBINATIONS[0].id
+                        : AVATAR_VOICE_COMBINATIONS[0].id
+                    ]
+                  )}
                   onSelectionChange={(keys) => handleCombinationChange(Array.from(keys)[0] as string)}
                 >
                   {AVATAR_VOICE_COMBINATIONS.map((combo) => (

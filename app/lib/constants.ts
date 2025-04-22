@@ -100,7 +100,7 @@ export const AVATAR_VOICE_COMBINATIONS = [
     id: "mujer-oficina-chile",
     avatar_id: "Marianne_Chair_Sitting_public", // Mujer Oficina
     voice_id: "55c3fee66bdf441eba6c065f64f64306",  // Fernanda
-    name: "Mujer Oficina con Acento de Chile"
+    name: "Mujer Oficina con acento de Chile"
   },
   {
     id: "mujer-oficina-neutro",

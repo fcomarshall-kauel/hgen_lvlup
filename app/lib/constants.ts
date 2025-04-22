@@ -1,6 +1,6 @@
 export const AVATARS = [
   {
-    avatar_id: "c20f4bdddbe041ecba98d93444f8b29b",
+    avatar_id: "Marianne_Chair_Sitting_public",
     name: "Mujer Oficina",
   },
   {
@@ -98,25 +98,25 @@ export const STT_LANGUAGE_LIST = [
 export const AVATAR_VOICE_COMBINATIONS = [
   {
     id: "mujer-oficina-chile",
-    avatar_id: "c20f4bdddbe041ecba98d93444f8b29b", // Mujer Oficina
+    avatar_id: "Marianne_Chair_Sitting_public", // Mujer Oficina
     voice_id: "55c3fee66bdf441eba6c065f64f64306",  // Fernanda
     name: "Mujer Oficina con Acento de Chile"
   },
   {
     id: "mujer-oficina-neutro",
-    avatar_id: "c20f4bdddbe041ecba98d93444f8b29b", // Hombre Oficina
+    avatar_id: "Marianne_Chair_Sitting_public", // Hombre Oficina
     voice_id: "781b14e4b01949438c844cffa6371a1c",  // Neutro
     name: "Mujer Oficina con acento neutro"
   },
   {
     id: "mujer-oficina-colombia",
-    avatar_id: "c20f4bdddbe041ecba98d93444f8b29b", // Hombre Oficina
+    avatar_id: "Marianne_Chair_Sitting_public", // Hombre Oficina
     voice_id: "1efd6e0e3fdf4e979a79d74219abdbe6",  // Colombiano
     name: "Mujer Oficina con acento de Colombia"
   },
   {
     id: "mujer-oficina-argentina",
-    avatar_id: "c20f4bdddbe041ecba98d93444f8b29b", // Hombre Oficina
+    avatar_id: "Marianne_Chair_Sitting_public", // Hombre Oficina
     voice_id: "bb8e997c011c4e46a214594ffc900ecb",  // Argentino
     name: "Mujer Oficina con acento de Argentina"
   },

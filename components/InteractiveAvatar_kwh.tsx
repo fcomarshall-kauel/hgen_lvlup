@@ -155,31 +155,20 @@ export default function InteractiveAvatar() {
         }),
       });
 
-      const aiResponseData = await aiResponse.json() as ChatResponse;
+      const aiResponseData = await aiResponse.text();
       const aiTime = performance.now() - startTime;
       
-      console.log(`AI Response (${aiTime.toFixed(0)}ms):`, aiResponseData.answer);
-      console.log('Full API Response:', {
-        full_response: aiResponseData,
-        sources: aiResponseData.context
-      });
+      console.log(`AI Response (${aiTime.toFixed(0)}ms):`, aiResponseData);
+      console.log('Full API Response:', aiResponseData);
       
-      if (!aiResponseData.answer) {
+      if (!aiResponseData) {
         throw new Error('No AI response found');
       }
-
-      // Process source documents
-      const uniqueFiles = Array.from(new Set(
-        aiResponseData.context
-          .map(ctx => ctx.metadata.filename)
-          .filter(Boolean)
-      ));
-      setSourceDocs(uniqueFiles);
 
       // Speak the response
       const avatarStartTime = performance.now();
       await avatar.current.speak({
-        text: aiResponseData.answer,
+        text: aiResponseData,
         taskType: TaskType.REPEAT,
         taskMode: TaskMode.SYNC
       });

@@ -17,8 +17,13 @@ export async function POST(request: Request) {
       }
     );
     
-    const data = await response.json();
-    return NextResponse.json(data);
+    const data = await response.text();
+    return new Response(data, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+    });
   } catch (error) {
     console.error('Error:', error);
     return NextResponse.json(

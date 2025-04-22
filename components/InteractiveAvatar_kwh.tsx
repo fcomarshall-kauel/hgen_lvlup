@@ -47,9 +47,9 @@ export default function InteractiveAvatar() {
   const [stream, setStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
   const [knowledgeId, setKnowledgeId] = useState<string>("");
-  const [avatarId, setAvatarId] = useState<string>("");
+  const [avatarId, setAvatarId] = useState<string>(AVATAR_VOICE_COMBINATIONS[0].avatar_id);
   const [language, setLanguage] = useState<string>('es');
-  const [voiceId, setVoiceId] = useState("");
+  const [voiceId, setVoiceId] = useState<string>(AVATAR_VOICE_COMBINATIONS[0].voice_id);
   const [audioPreview, setAudioPreview] = useState<HTMLAudioElement | null>(null);
 
   const [data, setData] = useState<StartAvatarResponse>();
@@ -358,13 +358,11 @@ export default function InteractiveAvatar() {
                   placeholder="Seleccione un agente"
                   variant="bordered"
                   disallowEmptySelection={false}
-                  selectedKeys={new Set(
-                    [
-                      avatarId && voiceId
-                        ? AVATAR_VOICE_COMBINATIONS.find(c => c.avatar_id === avatarId && c.voice_id === voiceId)?.id || AVATAR_VOICE_COMBINATIONS[0].id
-                        : AVATAR_VOICE_COMBINATIONS[0].id
-                    ]
-                  )}
+                  selectedKeys={new Set([
+                    AVATAR_VOICE_COMBINATIONS.find(c => 
+                      c.avatar_id === avatarId && c.voice_id === voiceId
+                    )?.id || AVATAR_VOICE_COMBINATIONS[0].id
+                  ])}
                   onSelectionChange={(keys) => handleCombinationChange(Array.from(keys)[0] as string)}
                 >
                   {AVATAR_VOICE_COMBINATIONS.map((combo) => (

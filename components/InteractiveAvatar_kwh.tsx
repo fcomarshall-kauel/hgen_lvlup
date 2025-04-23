@@ -1,4 +1,4 @@
-//InteractiveAvatar_kwh.tsx
+//InteractiveAvatar_kwh.tsx 
 import type { SpeakRequest, StartAvatarResponse } from "@heygen/streaming-avatar";
 import StreamingAvatar, {
   AvatarQuality,
@@ -121,7 +121,7 @@ export default function InteractiveAvatar() {
 
       // Direct greeting without AI processing
       await avatar.current.speak({
-        text: "Es un placer darle la bienvenida. Estoy aquí para sus consultas médicas, recursos sobre productos farmacéuticos, y las últimas publicaciones en su campo. Además, si tiene alguna pregunta específica sobre el tratamiento de sus pacientes, estaré encantada de asistirle.",
+        text: "Hola... Soy tu asistente virtual... Es un placer darte la bienvenida.Estaré encantada de proporcionarte la información que necesites en tu área de especialidad.No dudes en contactarme por temas de interés científico, guías actualizadas y formación médica contínua si lo requieres.",
         taskType: TaskType.REPEAT,
         taskMode: TaskMode.SYNC
       });

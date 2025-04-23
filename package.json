@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^0.0.34",
+    "@ffmpeg/ffmpeg": "^0.12.15",
     "@heygen/streaming-avatar": "^2.0.8",
     "@nextui-org/react": "^2.6.11",
     "@nextui-org/system": "^2.4.6",
@@ -18,7 +19,7 @@
     "@uiw/codemirror-extensions-langs": "^4.22.1",
     "@uiw/react-codemirror": "^4.22.1",
     "ahooks": "^3.8.1",
-    "ai": "^2.2.31",
+    "ai": "^2.2.37",
     "clsx": "2.1.1",
     "framer-motion": "^11.5.6",
     "intl-messageformat": "^10.5.0",

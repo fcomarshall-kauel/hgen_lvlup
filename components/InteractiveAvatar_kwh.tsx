@@ -1,3 +1,4 @@
+//InteractiveAvatar_kwh.tsx
 import type { SpeakRequest, StartAvatarResponse } from "@heygen/streaming-avatar";
 import StreamingAvatar, {
   AvatarQuality,

@@ -121,7 +121,7 @@ export default function InteractiveAvatar() {
 
       // Direct greeting without AI processing
       await avatar.current.speak({
-        text: "Hola... Soy tu asistente virtual... Es un placer darte la bienvenida.Estaré encantada de proporcionarte la información que necesites en tu área de especialidad.No dudes en contactarme por temas de interés científico, guías actualizadas y formación médica contínua si lo requieres.",
+        text: "Hola Doctor Sergio Cedano, Soy tu asistente virtual.Es un placer darte la bienvenida.Estaré encantada de proporcionarte la información que necesites en tu área de especialidad. No dudes en contactarme por temas de interés científico, guías actualizadas y formación médica contínua si lo requieres.",
         taskType: TaskType.REPEAT,
         taskMode: TaskMode.SYNC
       });

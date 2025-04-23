@@ -23,7 +23,7 @@ import { useMemoizedFn, usePrevious } from "ahooks";
 
 import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 
-import {AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES, AVATAR_VOICE_COMBINATIONS} from "@/app/lib/constants";
+import { AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES, AVATAR_VOICE_COMBINATIONS } from "@/app/lib/constants";
 
 // Define the response type
 interface ChatResponse {
@@ -64,6 +64,8 @@ export default function InteractiveAvatar() {
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'processing'>('idle');
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const [hasMicPermission, setHasMicPermission] = useState<boolean>(false);
+  const [isAvatarTalking, setIsAvatarTalking] = useState(false);
 
   async function fetchAccessToken() {
     try {
@@ -84,6 +86,8 @@ export default function InteractiveAvatar() {
 
   async function startSession() {
     setIsLoadingSession(true);
+    // Solicita permisos de micrófono al iniciar sesión
+    await requestMicrophonePermission();
     const newToken = await fetchAccessToken();
 
     avatar.current = new StreamingAvatar({
@@ -91,9 +95,11 @@ export default function InteractiveAvatar() {
     });
     avatar.current.on(StreamingEvents.AVATAR_START_TALKING, (e) => {
       console.log("Avatar started talking", e);
+      setIsAvatarTalking(true); // ⬅️ IMPORTANTE
     });
     avatar.current.on(StreamingEvents.AVATAR_STOP_TALKING, (e) => {
       console.log("Avatar stopped talking", e);
+      setIsAvatarTalking(false); // ⬅️ IMPORTANTE
     });
     avatar.current.on(StreamingEvents.STREAM_DISCONNECTED, () => {
       console.log("Stream disconnected");
@@ -107,7 +113,7 @@ export default function InteractiveAvatar() {
       const res = await avatar.current.createStartAvatar({
         quality: AvatarQuality.Low,
         avatarName: avatarId,
-        knowledgeId: knowledgeId, 
+        knowledgeId: knowledgeId,
         voice: {
           voiceId: voiceId,
           rate: 1,
@@ -146,7 +152,7 @@ export default function InteractiveAvatar() {
     try {
       setRecordingState('processing');
       const startTime = performance.now();
-      
+
       const aiResponse = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -158,10 +164,10 @@ export default function InteractiveAvatar() {
 
       const aiResponseData = await aiResponse.text();
       const aiTime = performance.now() - startTime;
-      
+
       console.log(`AI Response (${aiTime.toFixed(0)}ms):`, aiResponseData);
       console.log('Full API Response:', aiResponseData);
-      
+
       if (!aiResponseData) {
         throw new Error('No AI response found');
       }
@@ -219,6 +225,8 @@ export default function InteractiveAvatar() {
   }, [text, previousText]);
 
   useEffect(() => {
+    requestMicrophonePermission(); // <-- esto es clave
+    
     return () => {
       endSession();
     };
@@ -234,6 +242,19 @@ export default function InteractiveAvatar() {
     }
   }, [mediaStream, stream]);
 
+  async function requestMicrophonePermission() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop()); // liberamos el stream
+      console.log("[DEBUG] Permiso de micrófono concedido");
+      setHasMicPermission(true);
+    } catch (error) {
+      console.warn("[DEBUG] Permiso de micrófono denegado");
+      setHasMicPermission(false);
+    }
+  }
+
+
   const getSupportedMimeType = () => {
     const types = ['audio/webm', 'audio/mp4', 'audio/ogg'];
     for (let type of types) {
@@ -247,11 +268,18 @@ export default function InteractiveAvatar() {
 
   const startRecording = async () => {
     try {
+      // 👉 Si el avatar está hablando, lo interrumpimos
+      if (isAvatarTalking && avatar.current) {
+        console.log("[DEBUG] El avatar está hablando. Interrumpiendo...");
+        await avatar.current.interrupt();
+        setIsAvatarTalking(false);
+      }
+
       setRecordingState('recording');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = getSupportedMimeType();
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -268,6 +296,7 @@ export default function InteractiveAvatar() {
     }
   };
 
+
   const stopRecording = () => {
     const mediaRecorder = mediaRecorderRef.current;
     if (!mediaRecorder || recordingState !== 'recording') return;
@@ -278,7 +307,7 @@ export default function InteractiveAvatar() {
       await handleWhisperTranscription(audioBlob);
       setRecordingState('idle');
     };
-    
+
     mediaRecorder.stop();
     mediaRecorder.stream.getTracks().forEach(track => track.stop());
   };
@@ -299,7 +328,7 @@ export default function InteractiveAvatar() {
       const { text: transcription } = await response.json();
       const whisperTime = performance.now() - startTime;
       console.log(`Whisper transcription (${whisperTime.toFixed(0)}ms):`, transcription);
-      
+
       setText(transcription);
       if (transcription) {
         await handleSpeak(transcription);
@@ -338,6 +367,7 @@ export default function InteractiveAvatar() {
                   size="md"
                   variant="shadow"
                   onClick={handleInterrupt}
+                  isDisabled={!isAvatarTalking} // ⬅️ Desactiva cuando no habla el avatar
                 >
                   Interrumpir
                 </Button>
@@ -360,7 +390,7 @@ export default function InteractiveAvatar() {
                   variant="bordered"
                   disallowEmptySelection={false}
                   selectedKeys={new Set([
-                    AVATAR_VOICE_COMBINATIONS.find(c => 
+                    AVATAR_VOICE_COMBINATIONS.find(c =>
                       c.avatar_id === avatarId && c.voice_id === voiceId
                     )?.id || AVATAR_VOICE_COMBINATIONS[0].id
                   ])}
@@ -401,13 +431,12 @@ export default function InteractiveAvatar() {
                   onSubmit={handleSpeak}
                 />
                 <Button
-                  className={`ml-2 ${
-                    recordingState === 'recording' 
-                      ? 'bg-red-500' 
-                      : recordingState === 'processing' 
-                        ? 'bg-yellow-500' 
+                  className={`ml-2 ${recordingState === 'recording'
+                      ? 'bg-red-500'
+                      : recordingState === 'processing'
+                        ? 'bg-yellow-500'
                         : 'bg-blue-500'
-                  } text-white rounded-lg`}
+                    } text-white rounded-lg`}
                   size="md"
                   variant="shadow"
                   isDisabled={recordingState === 'processing'}
@@ -415,14 +444,14 @@ export default function InteractiveAvatar() {
                   onPointerUp={stopRecording}
                   onPointerLeave={stopRecording}
                 >
-                  {recordingState === 'recording' 
-                    ? 'Escuchando...' 
-                    : recordingState === 'processing' 
-                      ? 'Procesando...' 
+                  {recordingState === 'recording'
+                    ? 'Escuchando...'
+                    : recordingState === 'processing'
+                      ? 'Procesando...'
                       : 'Mantener para hablar'}
                 </Button>
               </div>
-              
+
               {sourceDocs.length > 0 && (
                 <div className="text-sm text-gray-500">
                   <p className="font-medium">Fuentes:</p>

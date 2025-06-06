@@ -1,4 +1,4 @@
-import { Input, Spinner, Tooltip } from "@nextui-org/react";
+import { Input, Spinner, Tooltip, Button } from "@nextui-org/react";
 import { Send } from "lucide-react"; // Reemplazo de PaperPlaneRight
 import clsx from "clsx";
 
@@ -31,6 +31,13 @@ export default function InteractiveAvatarTextInput({
     setInput("");
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Prevent form submission
+      handleSubmit();
+    }
+  };
+
   return (
     <Input
       endContent={
@@ -44,10 +51,13 @@ export default function InteractiveAvatarTextInput({
                 color="default"
               />
             ) : (
-              <button
-                type="submit"
-                className="focus:outline-none"
-                onClick={handleSubmit}
+              <Button
+                isIconOnly
+                variant="light"
+                size="sm"
+                onPress={handleSubmit}
+                isDisabled={disabled}
+                className="min-w-0 p-0 h-auto bg-transparent"
               >
                 <Send
                   className={clsx(
@@ -56,7 +66,7 @@ export default function InteractiveAvatarTextInput({
                   )}
                   size={24}
                 />
-              </button>
+              </Button>
             )}
           </Tooltip>
         </div>
@@ -65,11 +75,7 @@ export default function InteractiveAvatarTextInput({
       placeholder={placeholder}
       size="sm"
       value={input}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          handleSubmit();
-        }
-      }}
+      onKeyDown={handleKeyDown}
       onValueChange={setInput}
       isDisabled={disabled}
     />

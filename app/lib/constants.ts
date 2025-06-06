@@ -36,12 +36,12 @@ export const VOICES = [
   },
   {
     name: "Fernanda (Chile)",
-    voice_id: "55c3fee66bdf441eba6c065f64f64306", // Fernanda's voice ID
+    voice_id: "55c3fee66bdf441eba6c065f64f64306", // Fernanda's voice IDc 
     preview_url: "/fernanda.mp3"
   },
   {
-    name: "Jessica (Neutral)",
-    voice_id: "c8e176c17f814004885fd590e03ff99f", 
+    name: "Tara (Neutral)",
+    voice_id: "8c40eafefd494b3f9b072d69325d5f15", 
     preview_url: ""
   },
   // Add more avatars as needed
@@ -53,8 +53,8 @@ export const SIMULATIONS = [
     knowledgeId: "6368e34cc3f648eeb38bcb231b902e48",
   },
   {
-    situacion: "Onboarding",
-    knowledgeId: "another_knowledge_id_here",
+    situacion: "Tara UTA ",
+    knowledgeId: "6c3a2a0696a747d0aaac390f3f6910ec",
   },
   // Add more situations as needed
 ];

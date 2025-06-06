@@ -47,6 +47,9 @@ export default function InteractiveAvatarUta() {
   const [isListeningStarted, setIsListeningStarted] = useState(false);
   const [lastTranscript, setLastTranscript] = useState<string>("");
   const [showTranscript, setShowTranscript] = useState(false);
+  const [transcriptExiting, setTranscriptExiting] = useState(false);
+  const [userTalkingMessageCount, setUserTalkingMessageCount] = useState(0);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   async function fetchAccessToken() {
@@ -87,77 +90,64 @@ export default function InteractiveAvatarUta() {
       console.log(">>>>> Stream ready:", event.detail);
       setStream(event.detail);
     });
-    avatar.current?.on(StreamingEvents.USER_START, (event) => {
-      console.log(">>>>> User started talking:", event);
-      setIsUserTalking(true);
+    avatar.current?.on(StreamingEvents.USER_TALKING_MESSAGE, (event) => {
+      console.log('>>>>> User talking message (en tiempo real):', event);
+      
+      // Incrementar contador usando función callback para evitar problemas de sincronización
+      setUserTalkingMessageCount(prevCount => {
+        const newCount = prevCount + 1;
+        console.log(`📊 Mensaje #${newCount} (anterior: ${prevCount})`);
+        
+        if (event.detail && event.detail.message) {
+          if (newCount === 1) {
+            console.log("🤖 Primer mensaje (bienvenida del avatar) - IGNORADO:", event.detail.message);
+          } else {
+            console.log("🎤 Usuario hablando - MOSTRAR TRANSCRIPT:", event.detail.message);
+            setIsUserTalking(true);
+            setLastTranscript(event.detail.message);
+            setTranscriptExiting(false);
+            setShowTranscript(true);
+            
+            // Animación de salida después de 6 segundos
+            setTimeout(() => {
+              setTranscriptExiting(true);
+              // Ocultar completamente después de la animación
+              setTimeout(() => {
+                setShowTranscript(false);
+                setTranscriptExiting(false);
+              }, 500);
+            }, 6000);
+          }
+        }
+        
+        return newCount;
+      });
     });
-    avatar.current?.on(StreamingEvents.USER_STOP, (event) => {
-      console.log(">>>>> User stopped talking - EVENTO COMPLETO:", event);
-      console.log(">>>>> Event detail:", event.detail);
-      console.log(">>>>> Event keys:", Object.keys(event));
-      if (event.detail) {
-        console.log(">>>>> Detail keys:", Object.keys(event.detail));
-        console.log(">>>>> Detail completo:", JSON.stringify(event.detail, null, 2));
-      }
+    avatar.current?.on(StreamingEvents.USER_END_MESSAGE, (event) => {
+      console.log('>>>>> User end message (mensaje completo):', event);
       
-      // También revisar si hay otras propiedades en el evento principal
-      console.log(">>>>> Event completo serializado:", JSON.stringify({
-        type: event.type,
-        detail: event.detail,
-        target: event.target?.constructor?.name,
-        // Intentar capturar otras propiedades
-        data: (event as any).data,
-        message: (event as any).message,
-        text: (event as any).text,
-        transcript: (event as any).transcript
-      }, null, 2));
-      
-      setIsUserTalking(false);
-      
-      // Capturar transcript desde múltiples ubicaciones posibles
-      let transcript = null;
-      
-      // Opción 1: event.detail.transcript
-      if (event.detail && event.detail.transcript) {
-        transcript = event.detail.transcript;
-        console.log("✅ Transcript encontrado en event.detail.transcript:", transcript);
-      }
-      // Opción 2: event.detail.text
-      else if (event.detail && (event.detail as any).text) {
-        transcript = (event.detail as any).text;
-        console.log("✅ Transcript encontrado en event.detail.text:", transcript);
-      }
-      // Opción 3: directamente en event
-      else if ((event as any).transcript) {
-        transcript = (event as any).transcript;
-        console.log("✅ Transcript encontrado en event.transcript:", transcript);
-      }
-      // Opción 4: event.text
-      else if ((event as any).text) {
-        transcript = (event as any).text;
-        console.log("✅ Transcript encontrado en event.text:", transcript);
-      }
-      
-      if (transcript) {
-        setLastTranscript(transcript);
-        setShowTranscript(true);
-        setTimeout(() => setShowTranscript(false), 5000);
+      // Solo procesar si no es el primer mensaje (bienvenida)
+      if (userTalkingMessageCount > 1 && event.detail && event.detail.message) {
+        const userMessage = event.detail.message;
+        console.log("✅ Enviando pregunta del usuario al avatar:", userMessage);
+        setIsUserTalking(false);
+        
+        // Enviar la pregunta al avatar
+        if (avatar.current) {
+          avatar.current.speak({ 
+            text: userMessage, 
+            taskType: TaskType.TALK, 
+            taskMode: TaskMode.SYNC 
+          }).catch((e) => {
+            console.error("Error enviando pregunta del usuario:", e);
+          });
+        }
       } else {
-        console.log("❌ No se encontró transcript en ninguna ubicación conocida");
+        console.log("🤖 Mensaje del avatar (bienvenida) - NO ENVIAR");
       }
     });
     
-    console.log("✅ Event listeners registrados para USER_START y USER_STOP");
-
-    // Agregar más eventos para capturar transcript
-    // Intentar capturar eventos que puedan tener transcript
-    avatar.current.on('user_transcript', (event) => {
-      console.log(">>>>> USER_TRANSCRIPT event:", event);
-    });
-    
-    avatar.current.on('transcript', (event) => {
-      console.log(">>>>> TRANSCRIPT event:", event);
-    });
+    console.log("✅ Event listeners registrados para USER_TALKING_MESSAGE y USER_END_MESSAGE");
 
     try {
       const res = await avatar.current.createStartAvatar({
@@ -244,6 +234,11 @@ export default function InteractiveAvatarUta() {
       return;
     }
     console.log(`Cambiando modo de ${chatMode} a ${v}`);
+    
+    // Cambio instantáneo de la UI
+    setChatMode(v);
+    
+    // Ejecutar operaciones de voice chat en segundo plano
     if (v === "text_mode") {
       console.log("Cerrando voice chat...");
       try {
@@ -255,13 +250,23 @@ export default function InteractiveAvatarUta() {
     } else {
       console.log("Iniciando voice chat...");
       try {
-        await avatar.current?.startVoiceChat();
-        console.log("✅ Voice chat iniciado exitosamente");
+        // No usar await aquí para no bloquear la UI
+        console.log("🔊 Ejecutando avatar.startVoiceChat()...");
+        avatar.current?.startVoiceChat().then(() => {
+          console.log("✅ Voice chat iniciado exitosamente");
+          console.log("Voice chat state después de iniciar:", {
+            hasStartListening: typeof avatar.current?.startListening === 'function',
+            hasStopListening: typeof avatar.current?.stopListening === 'function',
+            stream: !!stream
+          });
+        }).catch((error) => {
+          console.log("❌ Error iniciando voice chat:", error);
+          console.log("Voice chat error details:", (error as Error).message);
+        });
       } catch (error) {
         console.log("❌ Error iniciando voice chat:", error);
       }
     }
-    setChatMode(v);
   });
 
   const previousText = usePrevious(text);
@@ -292,8 +297,15 @@ export default function InteractiveAvatarUta() {
   const handlePushToTalkStart = async () => {
     if (avatar.current && chatMode === "voice_mode") {
       console.log("Push-to-talk iniciado");
+      console.log("Avatar existe:", !!avatar.current);
+      console.log("Chat mode:", chatMode);
+      console.log("Stream existe:", !!stream);
+      
       setPressStartTime(Date.now());
       setIsPushToTalkActive(true);
+      
+      // Verificar si voice chat está activo antes de startListening
+      console.log("¿Voice chat está activo?", avatar.current);
       
       // Iniciar un timer para activar la escucha después de 1 segundo
       listeningTimeoutRef.current = setTimeout(async () => {
@@ -303,17 +315,20 @@ export default function InteractiveAvatarUta() {
           chatMode: chatMode,
           pressStartTime,
           currentTime: Date.now(),
-          timePassed: Date.now() - pressStartTime
+          timePassed: Date.now() - pressStartTime,
+          stream: !!stream
         });
         
         if (avatar.current && chatMode === "voice_mode") {
           console.log("Iniciando escucha después de 1 segundo...");
           try {
+            console.log("🎤 Ejecutando avatar.startListening()...");
             await avatar.current.startListening();
             console.log("✅ StartListening ejecutado exitosamente");
             setIsListeningStarted(true);
           } catch (error) {
             console.log("❌ Error en startListening:", error);
+            console.log("Error details:", (error as Error).message, (error as Error).stack);
           }
         } else {
           console.log("❌ No se puede iniciar escucha:", {
@@ -323,7 +338,11 @@ export default function InteractiveAvatarUta() {
         }
       }, 1000);
     } else {
-      console.log("Push-to-talk NO iniciado:", { avatar: !!avatar.current, chatMode });
+      console.log("Push-to-talk NO iniciado:", { 
+        avatar: !!avatar.current, 
+        chatMode,
+        stream: !!stream 
+      });
     }
   };
 
@@ -519,13 +538,35 @@ export default function InteractiveAvatarUta() {
                   </span>
                 </div>
                 
-                {/* Mostrar transcript si está disponible */}
-                {showTranscript && lastTranscript && (
-                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-center">
-                    <p className="text-xs text-blue-700 font-medium mb-1">Tu pregunta:</p>
-                    <p className="text-xs text-blue-800 italic">"{lastTranscript}"</p>
+                {/* Área reservada para transcript - espacio fijo para mantener video estable */}
+                <div className="h-32 mt-2 flex items-end">
+                  <div className={`w-full overflow-hidden transition-all duration-500 ease-out ${
+                    showTranscript ? "max-h-32" : "max-h-0"
+                  }`}>
+                    {showTranscript && lastTranscript && (
+                      <div className={`p-3 border border-blue-200 rounded-lg text-center transform transition-all duration-500 ease-out ${
+                        transcriptExiting 
+                          ? "opacity-0 -translate-y-2 scale-95 bg-gray-50" 
+                          : "opacity-100 translate-y-0 scale-100 bg-gradient-to-r from-blue-50 to-indigo-50 animate-in slide-in-from-top-2 fade-in"
+                      }`}>
+                        <div className="flex items-center justify-center mb-2">
+                          <span className="text-blue-600 text-sm mr-2 animate-bounce">🎤</span>
+                          <p className="text-xs text-blue-700 font-semibold">Tu pregunta:</p>
+                        </div>
+                        <div className="relative">
+                          <p className={`text-sm text-blue-800 italic font-medium leading-relaxed transition-all duration-700 delay-200 ${
+                            transcriptExiting ? "opacity-0" : "opacity-100 animate-in slide-in-from-left-1 fade-in"
+                          }`}>
+                            "{lastTranscript}"
+                          </p>
+                          <div className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-400 to-transparent transition-all duration-300 ${
+                            transcriptExiting ? "w-0" : "w-full animate-pulse"
+                          }`}></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             ) : (
               <div className="bg-white p-2 rounded-lg shadow border border-gray-200 w-full">

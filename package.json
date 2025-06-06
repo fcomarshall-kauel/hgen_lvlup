@@ -13,6 +13,7 @@
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@heygen/streaming-avatar": "^2.0.8",
     "@nextui-org/react": "^2.6.11",
+    "@nextui-org/switch": "^2.2.8",
     "@nextui-org/system": "^2.4.6",
     "@react-aria/ssr": "3.9.4",
     "@react-aria/visually-hidden": "3.8.12",

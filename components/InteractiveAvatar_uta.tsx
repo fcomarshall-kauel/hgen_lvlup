@@ -15,7 +15,7 @@ import {
   Tab,
 } from "@nextui-org/react";
 import { useEffect, useRef, useState } from "react";
-import { useMemoizedFn, usePrevious } from "ahooks";
+import { useMemoizedFn } from "ahooks";
 import Image from "next/image";
 
 import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
@@ -41,16 +41,13 @@ export default function InteractiveAvatarUta() {
   const avatar = useRef<StreamingAvatar | null>(null);
   const [chatMode, setChatMode] = useState("text_mode");
   const [isUserTalking, setIsUserTalking] = useState(false);
-  const [isPushToTalkActive, setIsPushToTalkActive] = useState(false);
-  const [showVoiceHint, setShowVoiceHint] = useState(false);
-  const [pressStartTime, setPressStartTime] = useState(0);
-  const [isListeningStarted, setIsListeningStarted] = useState(false);
   const [lastTranscript, setLastTranscript] = useState<string>("");
   const [showTranscript, setShowTranscript] = useState(false);
   const [transcriptExiting, setTranscriptExiting] = useState(false);
   const [userTalkingMessageCount, setUserTalkingMessageCount] = useState(0);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
-  const listeningTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isVoiceChatActive, setIsVoiceChatActive] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
+
 
   async function fetchAccessToken() {
     try {
@@ -58,15 +55,49 @@ export default function InteractiveAvatarUta() {
         method: "POST",
       });
       const token = await response.text();
-
-      console.log("Access Token:", token); // Log the token to verify
-
+      console.log("Access Token:", token);
       return token;
     } catch (error) {
       console.error("Error fetching access token:", error);
     }
-
     return "";
+  }
+
+  async function startContinuousVoiceChat() {
+    try {
+      console.log("🎤 Iniciando conversación de voz continua...");
+      
+      if (!avatar.current) {
+        throw new Error("Avatar not available");
+      }
+
+      await avatar.current.startVoiceChat();
+      setIsVoiceChatActive(true);
+      console.log("✅ Conversación de voz activa");
+      return true;
+    } catch (error) {
+      console.error("❌ Error iniciando conversación de voz:", error);
+      setIsVoiceChatActive(false);
+      return false;
+    }
+  }
+
+  async function stopContinuousVoiceChat() {
+    try {
+      console.log("🛑 Deteniendo conversación de voz...");
+      
+      if (avatar.current) {
+        avatar.current.closeVoiceChat();
+      }
+      
+      setIsVoiceChatActive(false);
+      setIsUserTalking(false); // Reset talking state
+      setShowTranscript(false); // Hide transcript
+      setLastTranscript(""); // Clear transcript
+      console.log("✅ Conversación de voz detenida");
+    } catch (error) {
+      console.error("❌ Error deteniendo conversación de voz:", error);
+    }
   }
 
   async function startSession() {
@@ -91,48 +122,54 @@ export default function InteractiveAvatarUta() {
       setStream(event.detail);
     });
     avatar.current?.on(StreamingEvents.USER_TALKING_MESSAGE, (event) => {
-      console.log('>>>>> User talking message (en tiempo real):', event);
+      console.log('>>>>> USER_TALKING_MESSAGE event:', event);
       
-      // Incrementar contador usando función callback para evitar problemas de sincronización
-      setUserTalkingMessageCount(prevCount => {
-        const newCount = prevCount + 1;
-        console.log(`📊 Mensaje #${newCount} (anterior: ${prevCount})`);
-        
-        if (event.detail && event.detail.message) {
-          if (newCount === 1) {
-            console.log("🤖 Primer mensaje (bienvenida del avatar) - IGNORADO:", event.detail.message);
-          } else {
-            console.log("🎤 Usuario hablando - MOSTRAR TRANSCRIPT:", event.detail.message);
-            setIsUserTalking(true);
-            setLastTranscript(event.detail.message);
-            setTranscriptExiting(false);
-            setShowTranscript(true);
-            
-            // Animación de salida después de 6 segundos
-            setTimeout(() => {
-              setTranscriptExiting(true);
-              // Ocultar completamente después de la animación
-              setTimeout(() => {
-                setShowTranscript(false);
-                setTranscriptExiting(false);
-              }, 500);
-            }, 6000);
-          }
+      // Filter out the specific welcome message
+      if (event.detail && event.detail.message) {
+        const message = event.detail.message;
+        if (message.includes("¡Hola! Soy Tara, tu asistente virtual de la Universidad de Tarapacá - UTA")) {
+          console.log("🤖 Mensaje de bienvenida específico ignorado:", message);
+          return;
         }
         
-        return newCount;
-      });
+        console.log("🎤 Usuario realmente hablando - MOSTRAR:", message);
+        setIsUserTalking(true);
+        setLastTranscript(message);
+        setTranscriptExiting(false);
+        setShowTranscript(true);
+        
+        // Auto hide after 8 seconds to give more time to read
+        setTimeout(() => {
+          setTranscriptExiting(true);
+          setTimeout(() => {
+            setShowTranscript(false);
+            setTranscriptExiting(false);
+            setIsUserTalking(false); // Reset talking state when hiding
+          }, 500);
+        }, 8000);
+      }
     });
     avatar.current?.on(StreamingEvents.USER_END_MESSAGE, (event) => {
-      console.log('>>>>> User end message (mensaje completo):', event);
+      console.log('>>>>> USER_END_MESSAGE event:', event);
       
-      // Solo procesar si no es el primer mensaje (bienvenida)
-      if (userTalkingMessageCount > 1 && event.detail && event.detail.message) {
+      if (event.detail && event.detail.message && event.detail.message.trim().length > 0) {
         const userMessage = event.detail.message;
-        console.log("✅ Enviando pregunta del usuario al avatar:", userMessage);
+        
+        // Filter out the specific welcome message
+        if (userMessage.includes("¡Hola! Soy Tara, tu asistente virtual de la Universidad de Tarapacá - UTA")) {
+          console.log("🤖 Mensaje de bienvenida específico ignorado en USER_END_MESSAGE:", userMessage);
+          return;
+        }
+        
+        console.log("✅ Procesando pregunta completa del usuario:", userMessage);
+        
+        // Update final transcript and keep it visible longer
+        setLastTranscript(userMessage);
+        setShowTranscript(true);
+        setTranscriptExiting(false);
         setIsUserTalking(false);
         
-        // Enviar la pregunta al avatar
+        // Send user question to avatar
         if (avatar.current) {
           avatar.current.speak({ 
             text: userMessage, 
@@ -142,12 +179,8 @@ export default function InteractiveAvatarUta() {
             console.error("Error enviando pregunta del usuario:", e);
           });
         }
-      } else {
-        console.log("🤖 Mensaje del avatar (bienvenida) - NO ENVIAR");
       }
     });
-    
-    console.log("✅ Event listeners registrados para USER_TALKING_MESSAGE y USER_END_MESSAGE");
 
     try {
       const res = await avatar.current.createStartAvatar({
@@ -156,7 +189,7 @@ export default function InteractiveAvatarUta() {
         knowledgeId: knowledgeId, 
         voice: {
           voiceId: voiceId,
-          rate: 1, // 0.5 ~ 1.5
+          rate: 1,
           emotion: VoiceEmotion.FRIENDLY,
         },
         language: language,
@@ -164,11 +197,6 @@ export default function InteractiveAvatarUta() {
 
       setData(res);
       console.log("✅ Avatar session creado:", res);
-      console.log("Avatar capabilities:", {
-        hasVoiceChat: typeof avatar.current?.startVoiceChat === 'function',
-        hasStartListening: typeof avatar.current?.startListening === 'function',
-        hasStopListening: typeof avatar.current?.stopListening === 'function'
-      });
       
       // Custom greeting for UTA
       await avatar.current.speak({
@@ -177,16 +205,6 @@ export default function InteractiveAvatarUta() {
         taskMode: TaskMode.SYNC
       });
       
-      // Si el usuario tenía modo voz seleccionado antes de conectar, activarlo
-      if (chatMode === "voice_mode") {
-        console.log("Activando voice chat porque el usuario tenía modo voz seleccionado");
-        try {
-          await avatar.current.startVoiceChat();
-          console.log("✅ Voice chat activado exitosamente después de la conexión");
-        } catch (error) {
-          console.log("❌ Error activando voice chat después de la conexión:", error);
-        }
-      }
     } catch (error) {
       console.error("Error starting avatar session:", error);
     } finally {
@@ -201,7 +219,6 @@ export default function InteractiveAvatarUta() {
       return;
     }
     
-    // Use TALK mode for conversation instead of REPEAT
     await avatar.current.speak({ 
       text: text, 
       taskType: TaskType.TALK, 
@@ -226,6 +243,7 @@ export default function InteractiveAvatarUta() {
 
   async function endSession() {
     await avatar.current?.stopAvatar();
+    await stopContinuousVoiceChat();
     setStream(undefined);
   }
 
@@ -235,48 +253,24 @@ export default function InteractiveAvatarUta() {
     }
     console.log(`Cambiando modo de ${chatMode} a ${v}`);
     
-    // Cambio instantáneo de la UI
     setChatMode(v);
     
-    // Ejecutar operaciones de voice chat en segundo plano
     if (v === "text_mode") {
-      console.log("Cerrando voice chat...");
-      try {
-        avatar.current?.closeVoiceChat();
-        console.log("✅ Voice chat cerrado");
-      } catch (error) {
-        console.log("❌ Error cerrando voice chat:", error);
-      }
+      console.log("Cambiando a modo texto...");
+      await stopContinuousVoiceChat();
+      console.log("✅ Modo texto activado");
     } else {
-      console.log("Iniciando voice chat...");
-      try {
-        // No usar await aquí para no bloquear la UI
-        console.log("🔊 Ejecutando avatar.startVoiceChat()...");
-        avatar.current?.startVoiceChat().then(() => {
-          console.log("✅ Voice chat iniciado exitosamente");
-          console.log("Voice chat state después de iniciar:", {
-            hasStartListening: typeof avatar.current?.startListening === 'function',
-            hasStopListening: typeof avatar.current?.stopListening === 'function',
-            stream: !!stream
-          });
-        }).catch((error) => {
-          console.log("❌ Error iniciando voice chat:", error);
-          console.log("Voice chat error details:", (error as Error).message);
-        });
-      } catch (error) {
-        console.log("❌ Error iniciando voice chat:", error);
+      console.log("🔊 Activando modo voz continuo...");
+      if (avatar.current && stream) {
+        const success = await startContinuousVoiceChat();
+        if (success) {
+          console.log("✅ Modo voz continuo activado automáticamente");
+        }
+      } else {
+        console.log("⚠️ Avatar o stream no disponible para activar voice chat automáticamente");
       }
     }
   });
-
-  const previousText = usePrevious(text);
-  useEffect(() => {
-    if (!previousText && text) {
-      avatar.current?.startListening();
-    } else if (previousText && !text) {
-      avatar?.current?.stopListening();
-    }
-  }, [text, previousText]);
 
   useEffect(() => {
     return () => {
@@ -294,94 +288,13 @@ export default function InteractiveAvatarUta() {
     }
   }, [mediaStream, stream]);
 
-  const handlePushToTalkStart = async () => {
-    if (avatar.current && chatMode === "voice_mode") {
-      console.log("Push-to-talk iniciado");
-      console.log("Avatar existe:", !!avatar.current);
-      console.log("Chat mode:", chatMode);
-      console.log("Stream existe:", !!stream);
-      
-      setPressStartTime(Date.now());
-      setIsPushToTalkActive(true);
-      
-      // Verificar si voice chat está activo antes de startListening
-      console.log("¿Voice chat está activo?", avatar.current);
-      
-      // Iniciar un timer para activar la escucha después de 1 segundo
-      listeningTimeoutRef.current = setTimeout(async () => {
-        // Verificar si el botón sigue presionado después de 1 segundo
-        console.log("Verificando estado después de 1 segundo:", {
-          avatar: !!avatar.current,
-          chatMode: chatMode,
-          pressStartTime,
-          currentTime: Date.now(),
-          timePassed: Date.now() - pressStartTime,
-          stream: !!stream
-        });
-        
-        if (avatar.current && chatMode === "voice_mode") {
-          console.log("Iniciando escucha después de 1 segundo...");
-          try {
-            console.log("🎤 Ejecutando avatar.startListening()...");
-            await avatar.current.startListening();
-            console.log("✅ StartListening ejecutado exitosamente");
-            setIsListeningStarted(true);
-          } catch (error) {
-            console.log("❌ Error en startListening:", error);
-            console.log("Error details:", (error as Error).message, (error as Error).stack);
-          }
-        } else {
-          console.log("❌ No se puede iniciar escucha:", {
-            avatar: !!avatar.current,
-            chatMode: chatMode
-          });
-        }
-      }, 1000);
-    } else {
-      console.log("Push-to-talk NO iniciado:", { 
-        avatar: !!avatar.current, 
-        chatMode,
-        stream: !!stream 
-      });
+  // Auto-start voice chat when in voice mode and avatar is ready
+  useEffect(() => {
+    if (chatMode === "voice_mode" && stream && avatar.current && !isVoiceChatActive) {
+      console.log("🎤 Auto-iniciando voice chat al detectar modo voz...");
+      startContinuousVoiceChat();
     }
-  };
-
-  const handlePushToTalkEnd = async () => {
-    if (avatar.current && chatMode === "voice_mode") {
-      const pressDuration = Date.now() - pressStartTime;
-      console.log(`Push-to-talk terminado. Duración: ${pressDuration}ms`);
-      
-      // Limpiar el timeout si existe
-      if (listeningTimeoutRef.current) {
-        clearTimeout(listeningTimeoutRef.current);
-        listeningTimeoutRef.current = null;
-      }
-      
-      // Si el click fue muy corto (menos de 1 segundo), mostrar hint y no hacer nada más
-      if (pressDuration < 1000) {
-        console.log("Click muy corto, mostrando hint");
-        setShowVoiceHint(true);
-        setTimeout(() => setShowVoiceHint(false), 3000);
-        setIsPushToTalkActive(false);
-        setIsListeningStarted(false);
-        return;
-      }
-      
-      // Solo detener la escucha si realmente se había iniciado
-      if (isListeningStarted) {
-        console.log("Deteniendo escucha...");
-        try {
-          await avatar.current.stopListening();
-          console.log("✅ Escucha detenida exitosamente");
-        } catch (error) {
-          console.log("❌ Error al detener escucha:", error);
-        }
-        setIsListeningStarted(false);
-      }
-      
-      setIsPushToTalkActive(false);
-    }
-  };
+  }, [chatMode, stream, isVoiceChatActive]);
 
   return (
     <div className="w-full flex flex-col gap-1">
@@ -419,6 +332,18 @@ export default function InteractiveAvatarUta() {
                   Terminar
                 </Button>
               </div>
+
+              {/* Audio level indicator when voice chat is active */}
+              {isVoiceChatActive && (
+                <div className="absolute top-2 left-2 flex items-center gap-2 bg-black bg-opacity-50 rounded-full px-3 py-2">
+                  <div className={`w-3 h-3 rounded-full ${isUserTalking ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
+                  <span className="text-white text-sm">
+                    {isUserTalking ? '🎤 Escuchando...' : '🔊 Conversación activa'}
+                  </span>
+                </div>
+              )}
+
+
             </div>
           ) : !isLoadingSession ? (
             <div className="h-full justify-center items-center flex flex-col gap-3 w-[400px] self-center">
@@ -466,7 +391,7 @@ export default function InteractiveAvatarUta() {
         </CardBody>
         <Divider className="bg-blue-200" />
         <CardFooter className="flex flex-col gap-1 relative bg-gradient-to-br from-blue-50 to-white py-2">
-          {/* Control de modo compacto */}
+          {/* Mode control */}
           <div className="bg-white p-2 rounded-lg shadow border border-gray-200 mb-1 w-full">
             <div className="flex items-center justify-center gap-3">
               <span className="text-xs font-medium text-gray-700">Modo:</span>
@@ -489,83 +414,62 @@ export default function InteractiveAvatarUta() {
                       : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                   }`}
                 >
-                  🎤 Voz
+                  🎤 Voz Continua
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Contenido según modo - ultra compacto */}
+          {/* Content based on mode */}
           {chatMode === "voice_mode" ? (
             stream ? (
-              <div className="bg-white p-2 rounded-lg shadow border border-gray-200 w-full">
-                <div className="flex justify-center relative">
-                  <button
-                    onMouseDown={handlePushToTalkStart}
-                    onMouseUp={handlePushToTalkEnd}
-                    onTouchStart={handlePushToTalkStart}
-                    onTouchEnd={handlePushToTalkEnd}
-                    className={`w-12 h-12 rounded-full text-white font-bold text-sm transition-all duration-200 shadow-lg active:scale-95 ${
-                      isListeningStarted
+              <div className="bg-white p-3 rounded-lg shadow border border-gray-200 w-full">
+                <div className="text-center">
+                  <div 
+                    className={`w-16 h-16 mx-auto rounded-full text-white font-bold text-lg transition-all duration-200 shadow-lg flex items-center justify-center ${
+                      isUserTalking
                         ? "bg-red-500 shadow-red-300 shadow-xl animate-pulse"
-                        : isPushToTalkActive
-                        ? "bg-yellow-500 shadow-yellow-300 shadow-xl"
-                        : "bg-blue-600 hover:bg-blue-700 shadow-blue-300"
+                        : isVoiceChatActive
+                        ? "bg-green-500 shadow-green-300"
+                        : "bg-yellow-500 shadow-yellow-300"
                     }`}
                   >
-                    🎤
-                  </button>
-                  {showVoiceHint && (
-                    <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap z-20 animate-bounce">
-                      ¡Mantén presionado!
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-2 border-transparent border-t-red-500"></div>
-                    </div>
-                  )}
-                </div>
-                <div className="text-center mt-1">
-                  <span className={`text-xs font-medium ${
-                    isListeningStarted 
-                      ? "text-red-600" 
-                      : isPushToTalkActive 
-                      ? "text-yellow-600" 
-                      : "text-gray-500"
-                  }`}>
-                    {isListeningStarted 
-                      ? "🔴 Grabando..." 
-                      : isPushToTalkActive 
-                      ? "⏳ Manteniendo..." 
-                      : "Lista para escuchar"}
-                  </span>
-                </div>
-                
-                {/* Área reservada para transcript - espacio fijo para mantener video estable */}
-                <div className="h-32 mt-2 flex items-end">
-                  <div className={`w-full overflow-hidden transition-all duration-500 ease-out ${
-                    showTranscript ? "max-h-32" : "max-h-0"
-                  }`}>
-                    {showTranscript && lastTranscript && (
-                      <div className={`p-3 border border-blue-200 rounded-lg text-center transform transition-all duration-500 ease-out ${
-                        transcriptExiting 
-                          ? "opacity-0 -translate-y-2 scale-95 bg-gray-50" 
-                          : "opacity-100 translate-y-0 scale-100 bg-gradient-to-r from-blue-50 to-indigo-50 animate-in slide-in-from-top-2 fade-in"
-                      }`}>
-                        <div className="flex items-center justify-center mb-2">
-                          <span className="text-blue-600 text-sm mr-2 animate-bounce">🎤</span>
-                          <p className="text-xs text-blue-700 font-semibold">Tu pregunta:</p>
-                        </div>
-                        <div className="relative">
-                          <p className={`text-sm text-blue-800 italic font-medium leading-relaxed transition-all duration-700 delay-200 ${
-                            transcriptExiting ? "opacity-0" : "opacity-100 animate-in slide-in-from-left-1 fade-in"
-                          }`}>
-                            "{lastTranscript}"
-                          </p>
-                          <div className={`absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-400 to-transparent transition-all duration-300 ${
-                            transcriptExiting ? "w-0" : "w-full animate-pulse"
-                          }`}></div>
-                        </div>
-                      </div>
-                    )}
+                    {isUserTalking ? "🔴" : isVoiceChatActive ? "🎤" : "⏳"}
                   </div>
+                  <div className="mt-2">
+                    <span className={`text-sm font-medium ${
+                      isUserTalking 
+                        ? "text-red-600" 
+                        : isVoiceChatActive
+                        ? "text-green-600"
+                        : "text-yellow-600"
+                    }`}>
+                      {isUserTalking 
+                        ? "🤔 Estoy pensando..." 
+                        : isVoiceChatActive
+                        ? "🎤 Conversación activa - Habla libremente"
+                        : "⏳ Activando conversación de voz..."}
+                    </span>
+                  </div>
+                  
+                  {/* User transcript integrated below status */}
+                  {showTranscript && lastTranscript ? (
+                    <div className={`mt-3 p-3 border border-blue-200 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 transform transition-all duration-500 ease-out ${
+                      transcriptExiting 
+                        ? "opacity-0 scale-95" 
+                        : "opacity-100 scale-100"
+                    }`}>
+                      <div className="flex items-center justify-center mb-2">
+                        <span className="text-blue-600 text-xs mr-2">💬</span>
+                        <p className="text-xs text-blue-700 font-semibold">Tu pregunta:</p>
+                      </div>
+                      <p className="text-sm text-blue-800 italic font-medium leading-relaxed">
+                        "{lastTranscript}"
+                      </p>
+                    </div>
+                  ) : null}
+                  
+
                 </div>
               </div>
             ) : (
@@ -589,9 +493,6 @@ export default function InteractiveAvatarUta() {
                 setInput={setText}
                 onSubmit={handleSpeak}
               />
-              {text && (
-                <Chip className="absolute right-12 top-2 bg-blue-100 text-blue-700" size="sm">Escuchando</Chip>
-              )}
             </div>
           )}
         </CardFooter>
@@ -600,7 +501,7 @@ export default function InteractiveAvatarUta() {
         <span className="font-bold">📊 Estado:</span> {
           debug || 
           (stream 
-            ? `✅ Conectado - Modo ${chatMode === "voice_mode" ? "🎤 Voz" : "💬 Texto"}`
+            ? `✅ Conectado - Modo ${chatMode === "voice_mode" ? "🎤 Voz" : "💬 Texto"} ${isVoiceChatActive ? "(Activo)" : ""}`
             : `⚪ Sin conexión - Modo ${chatMode === "voice_mode" ? "🎤 Voz" : "💬 Texto"} seleccionado`
           )
         }

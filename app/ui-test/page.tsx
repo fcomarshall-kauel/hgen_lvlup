@@ -14,6 +14,7 @@ import {
 } from "@nextui-org/react";
 import Image from "next/image";
 import ConversationStatus from "@/components/ConversationStatus";
+import ConversationHistory, { ConversationMessage } from "@/components/ConversationHistory";
 import InteractiveAvatarTextInput from "@/components/InteractiveAvatarTextInput";
 
 export default function UITestPage() {
@@ -28,11 +29,15 @@ export default function UITestPage() {
   const [isAvatarTalking, setIsAvatarTalking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastTranscript, setLastTranscript] = useState("");
+  const [currentAvatarMessage, setCurrentAvatarMessage] = useState("");
   const [text, setText] = useState("");
   
   // Test controls
   const [autoSimulation, setAutoSimulation] = useState(false);
   const [simulationSpeed, setSimulationSpeed] = useState(2);
+  
+  // Conversation history
+  const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
   
   // Mock video element
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -57,6 +62,21 @@ export default function UITestPage() {
     return () => clearInterval(interval);
   }, [autoSimulation, isSessionActive, simulationSpeed]);
 
+  const addToHistory = (type: 'user' | 'avatar', content: string) => {
+    const newMessage: ConversationMessage = {
+      id: Date.now().toString(),
+      type,
+      content,
+      timestamp: new Date()
+    };
+    console.log('🔥 Adding to history:', { type, content, id: newMessage.id });
+    setConversationHistory(prev => {
+      const updated = [...prev, newMessage];
+      console.log('📝 Updated history:', updated);
+      return updated;
+    });
+  };
+
   const simulateRandomInteraction = () => {
     if (isUserTalking || isAvatarTalking || isProcessing) return;
 
@@ -70,6 +90,9 @@ export default function UITestPage() {
       setIsUserTalking(false);
       setLastTranscript(randomTranscript); // NOW we update the transcript
       
+      // Add user message to history
+      addToHistory('user', randomTranscript);
+      
       // Start processing state
       setIsProcessing(true);
       
@@ -79,10 +102,27 @@ export default function UITestPage() {
         setIsProcessing(false);
         setIsAvatarTalking(true);
         
+        // Generate avatar response
+        const avatarResponses = [
+          "Entiendo tu pregunta. Déjame ayudarte con esa información sobre la Universidad de Tarapacá.",
+          "Esa es una excelente consulta. Te proporciono la respuesta completa sobre nuestros programas académicos.",
+          "Perfecto, puedo orientarte sobre ese tema específico. La UTA ofrece diversas opciones.",
+          "Es una pregunta muy común entre los estudiantes. Te explico todos los detalles relevantes.",
+          "Me alegra que preguntes sobre eso. Aquí tienes la información actualizada que necesitas."
+        ];
+        const randomResponse = avatarResponses[Math.floor(Math.random() * avatarResponses.length)];
+        
+        // Set current avatar message for real-time display
+        setCurrentAvatarMessage(randomResponse);
+        
+        // Add avatar response to history
+        addToHistory('avatar', randomResponse);
+        
         // Avatar talks for 3-5 seconds
         const talkDuration = 3000 + Math.random() * 2000;
         setTimeout(() => {
           setIsAvatarTalking(false);
+          setCurrentAvatarMessage(""); // Clear current message when done talking
         }, talkDuration);
       }, processingTime);
     }, 2000);
@@ -97,11 +137,16 @@ export default function UITestPage() {
     setIsSessionActive(true);
     setIsLoading(false);
     
+    // Add welcome message to history
+    addToHistory('avatar', '¡Hola! Bienvenido al simulador. Soy Tara, tu asistente virtual de la UTA.');
+    
     // Simulate welcome message
     setTimeout(() => {
       setIsAvatarTalking(true);
+      setCurrentAvatarMessage('¡Hola! Bienvenido al simulador. Soy Tara, tu asistente virtual de la UTA.');
       setTimeout(() => {
         setIsAvatarTalking(false);
+        setCurrentAvatarMessage('');
       }, 3000);
     }, 500);
   };
@@ -113,7 +158,9 @@ export default function UITestPage() {
     setIsAvatarTalking(false);
     setIsProcessing(false);
     setLastTranscript("");
+    setCurrentAvatarMessage("");
     setAutoSimulation(false);
+    setConversationHistory([]);
   };
 
   const toggleVoiceChat = () => {
@@ -134,6 +181,12 @@ export default function UITestPage() {
   const handleSpeak = () => {
     if (!text.trim()) return;
     
+    const userMessage = text;
+    
+    // Add user message to history
+    addToHistory('user', userMessage);
+    setLastTranscript(userMessage);
+    
     // Start processing
     setIsProcessing(true);
     setText("");
@@ -143,9 +196,26 @@ export default function UITestPage() {
       setIsProcessing(false);
       setIsAvatarTalking(true);
       
+      // Generate avatar response
+      const avatarResponses = [
+        "Entiendo tu consulta sobre la UTA. Aquí tienes la información detallada que solicitas.",
+        "Esa es una pregunta muy interesante sobre nuestros servicios. Te ayudo con la respuesta completa.",
+        "Perfecto, puedo orientarte sobre ese tema específico de la universidad.",
+        "Gracias por tu pregunta. Te proporciono todos los detalles relevantes sobre la UTA.",
+        "Es un gusto ayudarte. Aquí está la información académica que necesitas."
+      ];
+      const randomResponse = avatarResponses[Math.floor(Math.random() * avatarResponses.length)];
+      
+      // Set current avatar message for real-time display
+      setCurrentAvatarMessage(randomResponse);
+      
+      // Add avatar response to history
+      addToHistory('avatar', randomResponse);
+      
       // Avatar talks for 2-5 seconds
       setTimeout(() => {
         setIsAvatarTalking(false);
+        setCurrentAvatarMessage(""); // Clear current message when done talking
       }, 2000 + Math.random() * 3000);
     }, 1000 + Math.random() * 2000);
   };
@@ -153,10 +223,10 @@ export default function UITestPage() {
   const simulateUserTalking = () => {
     const randomTranscript = sampleTranscripts[Math.floor(Math.random() * sampleTranscripts.length)];
     setIsUserTalking(true);
-    setLastTranscript(randomTranscript);
     
     setTimeout(() => {
       setIsUserTalking(false);
+      setLastTranscript(randomTranscript); // Update transcript when user stops talking
       
       // Start processing after user stops talking
       setIsProcessing(true);
@@ -206,8 +276,17 @@ export default function UITestPage() {
                         <p className="text-sm opacity-80">
                           {isAvatarTalking ? "Hablando..." : 
                            isUserTalking ? "Escuchando..." : 
+                           isProcessing ? "Procesando..." :
                            "Esperando..."}
                         </p>
+                        {/* Show current avatar message */}
+                        {isAvatarTalking && currentAvatarMessage && (
+                          <div className="mt-2 max-w-xs">
+                            <p className="text-xs text-gray-300 bg-black bg-opacity-50 p-2 rounded">
+                              💬 "{currentAvatarMessage}"
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -218,6 +297,7 @@ export default function UITestPage() {
                       isAvatarTalking={isAvatarTalking}
                       isProcessing={isProcessing}
                       lastTranscript={lastTranscript}
+                      currentAvatarMessage={currentAvatarMessage}
                       chatMode={chatMode}
                       mode="overlay"
                     />
@@ -309,29 +389,38 @@ export default function UITestPage() {
                 </div>
 
                 {/* Content based on mode */}
-                {chatMode === "voice_mode" ? (
-                  <ConversationStatus
-                    isVoiceChatActive={isVoiceChatActive}
-                    isUserTalking={isUserTalking}
-                    isAvatarTalking={isAvatarTalking}
-                    isProcessing={isProcessing}
-                    lastTranscript={lastTranscript}
-                    chatMode={chatMode}
-                    mode="panel"
-                  />
-                ) : (
-                  <div className="w-full flex relative">
-                    <InteractiveAvatarTextInput
-                      disabled={!isSessionActive}
-                      input={text}
-                      label="Texto de prueba"
-                      loading={isAvatarTalking}
-                      placeholder="Escribe algo para probar..."
-                      setInput={setText}
-                      onSubmit={handleSpeak}
+                <div className="space-y-3">
+                  {chatMode === "voice_mode" ? (
+                    <ConversationStatus
+                      isVoiceChatActive={isVoiceChatActive}
+                      isUserTalking={isUserTalking}
+                      isAvatarTalking={isAvatarTalking}
+                      isProcessing={isProcessing}
+                      lastTranscript={lastTranscript}
+                      currentAvatarMessage={currentAvatarMessage}
+                      chatMode={chatMode}
+                      mode="panel"
                     />
-                  </div>
-                )}
+                  ) : (
+                    <div className="w-full flex relative">
+                      <InteractiveAvatarTextInput
+                        disabled={!isSessionActive}
+                        input={text}
+                        label="Texto de prueba"
+                        loading={isAvatarTalking}
+                        placeholder="Escribe algo para probar..."
+                        setInput={setText}
+                        onSubmit={handleSpeak}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Conversation History - Always visible for debugging */}
+                  <ConversationHistory 
+                    messages={conversationHistory}
+                    className="w-full"
+                  />
+                </div>
               </CardFooter>
             </Card>
           </div>
@@ -422,6 +511,16 @@ export default function UITestPage() {
                     disabled={!isUserTalking && !isAvatarTalking && !isProcessing}
                   >
                     ⏹️ Detener Todo
+                  </Button>
+                  <Button
+                    size="sm"
+                    color="secondary"
+                    variant="flat"
+                    className="w-full"
+                    onClick={() => setConversationHistory([])}
+                    disabled={conversationHistory.length === 0}
+                  >
+                    🗑️ Limpiar Historial
                   </Button>
                 </div>
               </CardBody>

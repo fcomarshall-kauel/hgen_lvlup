@@ -20,6 +20,7 @@ import Image from "next/image";
 
 import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 import ConversationStatus from "./ConversationStatus";
+import ConversationHistory, { ConversationMessage } from "./ConversationHistory";
 
 import {AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES} from "@/app/lib/constants";
 
@@ -45,6 +46,7 @@ export default function InteractiveAvatarUta() {
   const [isVoiceChatActive, setIsVoiceChatActive] = useState(false);
   const [isAvatarTalking, setIsAvatarTalking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
 
   async function fetchAccessToken() {
     try {
@@ -429,6 +431,16 @@ export default function InteractiveAvatarUta() {
                 placeholder="¿Qué quieres saber sobre UTA?..."
                 setInput={setText}
                 onSubmit={handleSpeak}
+              />
+            </div>
+          )}
+          
+          {/* Conversation History */}
+          {stream && (
+            <div className="mt-3">
+              <ConversationHistory 
+                messages={conversationHistory}
+                className="w-full"
               />
             </div>
           )}

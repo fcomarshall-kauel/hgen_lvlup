@@ -54,6 +54,12 @@ export default function NavBar() {
             Guide
           </Link>
           <Link
+            color="foreground"
+            href="/ui-test"
+          >
+            🧪 UI Test
+          </Link>
+          <Link
             isExternal
             aria-label="Github"
             href="https://github.com/HeyGen-Official/StreamingAvatarSDK"

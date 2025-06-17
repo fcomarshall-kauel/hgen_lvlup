@@ -33,9 +33,9 @@ export default function UtaAI() {
       </header>
 
       {/* Contenido principal */}
-      <main className="flex-1 max-w-7xl mx-auto px-6 py-6 flex flex-col justify-center items-center">
+      <main className="flex-1 max-w-7xl mx-auto px-6 py-6 flex flex-col h-full">
         {/* Componente principal del avatar */}
-        <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden w-full max-w-4xl">
+        <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
           <InteractiveAvatarUta />
         </div>
       </main>

@@ -40,13 +40,28 @@ export default function InteractiveAvatarUta() {
   const [text, setText] = useState<string>("");
   const mediaStream = useRef<HTMLVideoElement>(null);
   const avatar = useRef<StreamingAvatar | null>(null);
-  const [chatMode, setChatMode] = useState<'text_mode' | 'voice_mode'>('text_mode');
+  const [chatMode, setChatMode] = useState<'text_mode' | 'voice_mode'>('voice_mode');
   const [isUserTalking, setIsUserTalking] = useState(false);
   const [lastTranscript, setLastTranscript] = useState<string>("");
   const [isVoiceChatActive, setIsVoiceChatActive] = useState(false);
   const [isAvatarTalking, setIsAvatarTalking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
+
+  const addToHistory = (type: 'user' | 'avatar', content: string) => {
+    const newMessage: ConversationMessage = {
+      id: Date.now().toString(),
+      type,
+      content,
+      timestamp: new Date()
+    };
+    console.log('🔥 Adding to history:', { type, content, id: newMessage.id });
+    setConversationHistory(prev => {
+      const updated = [...prev, newMessage];
+      console.log('📝 Updated history:', updated);
+      return updated;
+    });
+  };
 
   async function fetchAccessToken() {
     try {
@@ -116,6 +131,15 @@ export default function InteractiveAvatarUta() {
       console.log("Avatar stopped talking", e);
       setIsAvatarTalking(false);
     });
+
+    // Capture avatar responses
+    avatar.current.on(StreamingEvents.AVATAR_TALKING_MESSAGE, (event) => {
+      console.log('Avatar talking message:', event);
+      if (event.detail && event.detail.message) {
+        // Add avatar response to history when it finishes talking
+        addToHistory('avatar', event.detail.message);
+      }
+    });
     
     avatar.current.on(StreamingEvents.STREAM_DISCONNECTED, () => {
       console.log("Stream disconnected");
@@ -141,6 +165,8 @@ export default function InteractiveAvatarUta() {
       setIsUserTalking(false);
       if (event.detail && event.detail.message) {
         setLastTranscript(event.detail.message);
+        // Add user message to history
+        addToHistory('user', event.detail.message);
         // The avatar will automatically respond based on knowledgeId
         // No need to manually call speak() here
       }
@@ -174,11 +200,16 @@ export default function InteractiveAvatarUta() {
       console.log("✅ Avatar session created:", res);
       
       // Welcome message using REPEAT to avoid knowledge base interference
+      const welcomeMessage = "¡Hola! Soy Tara, tu asistente virtual de la Universidad de Tarapacá. Es un gusto conocerte. Estoy aquí para apoyarte en tu formación académica y resolver cualquier consulta que tengas sobre nuestros programas, servicios universitarios y vida estudiantil. ¿En qué puedo ayudarte hoy?";
+      
       await avatar.current.speak({
-        text: "¡Hola! Soy Tara, tu asistente virtual de la Universidad de Tarapacá. Es un gusto conocerte. Estoy aquí para apoyarte en tu formación académica y resolver cualquier consulta que tengas sobre nuestros programas, servicios universitarios y vida estudiantil. ¿En qué puedo ayudarte hoy?",
+        text: welcomeMessage,
         taskType: TaskType.REPEAT,
         taskMode: TaskMode.SYNC
       });
+      
+      // Add welcome message to history
+      addToHistory('avatar', welcomeMessage);
       
     } catch (error) {
       console.error("Error starting avatar session:", error);
@@ -195,9 +226,14 @@ export default function InteractiveAvatarUta() {
       return;
     }
     
+    const userMessage = text;
+    
     try {
+      // Add user message to history first
+      addToHistory('user', userMessage);
+      
       await avatar.current.speak({ 
-        text: text, 
+        text: userMessage, 
         taskType: TaskType.TALK, 
         taskMode: TaskMode.SYNC 
       });
@@ -232,6 +268,8 @@ export default function InteractiveAvatarUta() {
       setStream(undefined);
       setData(undefined);
       setDebug("");
+      setConversationHistory([]); // Clear conversation history
+      setLastTranscript(""); // Clear last transcript
     } catch (error) {
       console.error("Error ending session:", error);
     }
@@ -273,11 +311,11 @@ export default function InteractiveAvatarUta() {
   }, [mediaStream, stream]);
 
   return (
-    <div className="w-full flex flex-col gap-1">
-      <Card className="border-2 border-blue-200 shadow-lg">
-        <CardBody className="h-[380px] flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className="w-full h-full flex flex-col">
+      <Card className="border-2 border-blue-200 shadow-lg h-full flex flex-col">
+        <CardBody className="min-h-[300px] h-[40vh] max-h-[500px] flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-indigo-50 relative flex-shrink-0">
           {stream ? (
-            <div className="h-[380px] w-full justify-center items-center flex rounded-lg overflow-hidden border-4 border-blue-300 shadow-inner">
+            <div className="h-full w-full justify-center items-center flex rounded-lg overflow-hidden border-4 border-blue-300 shadow-inner">
               <video
                 ref={mediaStream}
                 autoPlay
@@ -366,61 +404,61 @@ export default function InteractiveAvatarUta() {
           )}
         </CardBody>
         <Divider className="bg-blue-200" />
-        <CardFooter className="flex flex-col gap-1 relative bg-gradient-to-br from-blue-50 to-white py-2">
-          {/* Mode control */}
-          <div className="bg-white p-2 rounded-lg shadow border border-gray-200 mb-1 w-full">
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-xs font-medium text-gray-700">Modo:</span>
-              <div className="flex">
-                <button
-                  onClick={() => handleChangeChatMode("text_mode")}
-                  className={`py-1 px-3 text-xs font-medium rounded-l-lg border transition-colors ${
-                    chatMode === "text_mode"
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                  }`}
-                >
-                  💬 Texto
-                </button>
-                <button
-                  onClick={() => handleChangeChatMode("voice_mode")}
-                  className={`py-1 px-3 text-xs font-medium rounded-r-lg border-l-0 border transition-colors relative ${
-                    chatMode === "voice_mode"
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                  }`}
-                  disabled={!stream}
-                >
-                  🎤 Voz Continua
-                </button>
+        <CardFooter className="flex flex-col gap-3 relative bg-gradient-to-br from-blue-50 to-white p-4 flex-1 overflow-hidden">
+          {/* Status Panel - Single container */}
+          <div className="bg-white p-3 rounded-lg shadow border border-gray-200">
+            <div className="flex items-center justify-between gap-4">
+              {/* Mode selector */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-700">Modo:</span>
+                <div className="flex">
+                  <button
+                    onClick={() => handleChangeChatMode("voice_mode")}
+                    className={`py-1.5 px-3 text-xs font-medium rounded-l-lg border transition-colors ${
+                      chatMode === "voice_mode"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                    }`}
+                    disabled={!stream}
+                  >
+                    🎤 Conversación
+                  </button>
+                  <button
+                    onClick={() => handleChangeChatMode("text_mode")}
+                    className={`py-1.5 px-3 text-xs font-medium rounded-r-lg border-l-0 border transition-colors ${
+                      chatMode === "text_mode"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                    }`}
+                  >
+                    💬 Texto
+                  </button>
+                </div>
+              </div>
+
+              {/* Status indicator */}
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${
+                  isUserTalking ? 'bg-red-500 animate-pulse' :
+                  isAvatarTalking ? 'bg-blue-500 animate-pulse' :
+                  isProcessing ? 'bg-yellow-500 animate-pulse' :
+                  stream ? 'bg-green-500' :
+                  'bg-gray-300'
+                }`}></div>
+                <span className="text-xs text-gray-600 font-medium">
+                  {isUserTalking ? 'Usuario hablando' :
+                   isAvatarTalking ? 'Tara respondiendo' :
+                   isProcessing ? 'Procesando...' :
+                   stream ? 'Conversación activa' :
+                   'Conectando...'}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Content based on mode */}
-          {chatMode === "voice_mode" ? (
-            stream ? (
-              <ConversationStatus
-                isVoiceChatActive={isVoiceChatActive}
-                isUserTalking={isUserTalking}
-                isAvatarTalking={isAvatarTalking}
-                isProcessing={isProcessing}
-                lastTranscript={lastTranscript}
-                chatMode={chatMode}
-                mode="panel"
-              />
-            ) : (
-              <div className="bg-white p-2 rounded-lg shadow border border-gray-200 w-full">
-                <div className="text-center py-2">
-                  <div className="text-gray-400 text-2xl mb-1">🎤</div>
-                  <p className="text-xs text-gray-500">
-                    Inicia la conversación primero para usar el modo voz
-                  </p>
-                </div>
-              </div>
-            )
-          ) : (
-            <div className="w-full flex relative">
+          {/* Mode-specific content - Text mode only */}
+          {chatMode === "text_mode" && (
+            <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
               <InteractiveAvatarTextInput
                 disabled={!stream}
                 input={text}
@@ -433,26 +471,31 @@ export default function InteractiveAvatarUta() {
             </div>
           )}
           
-          {/* Conversation History */}
-          {stream && (
-            <div className="mt-3">
+          {/* Conversation History - Full width with dynamic height */}
+          <div className="flex-1 flex flex-col min-h-0">
+            {conversationHistory.length > 0 ? (
               <ConversationHistory 
-                messages={conversationHistory}
-                className="w-full"
+                messages={[...conversationHistory].reverse()}
+                className="w-full flex-1"
+                dynamicHeight={true}
               />
-            </div>
-          )}
+            ) : (
+              stream && (
+                <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-6 text-center flex-1 flex flex-col justify-center">
+                  <div className="text-2xl mb-2">💭</div>
+                  <p className="text-sm text-gray-600 mb-1">No hay conversación aún</p>
+                  <p className="text-xs text-gray-500">
+                    {chatMode === 'voice_mode' 
+                      ? 'Usa la conversación de voz para hablar con Tara'
+                      : 'Escribe una pregunta para comenzar'
+                    }
+                  </p>
+                </div>
+              )
+            )}
+          </div>
         </CardFooter>
       </Card>
-      <p className="font-mono text-right text-blue-600 text-xs">
-        <span className="font-bold">📊 Estado:</span> {
-          debug || 
-          (stream 
-            ? `✅ Conectado - Modo ${chatMode === "voice_mode" ? "🎤 Voz" : "💬 Texto"} ${isVoiceChatActive ? "(Activo)" : ""}`
-            : `⚪ Sin conexión - Modo ${chatMode === "voice_mode" ? "🎤 Voz" : "💬 Texto"} seleccionado`
-          )
-        }
-      </p>
     </div>
   );
 } 

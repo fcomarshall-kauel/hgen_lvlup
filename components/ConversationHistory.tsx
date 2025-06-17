@@ -11,23 +11,30 @@ export interface ConversationMessage {
 interface ConversationHistoryProps {
   messages: ConversationMessage[];
   className?: string;
+  dynamicHeight?: boolean;
 }
 
 export default function ConversationHistory({
   messages,
-  className = ""
+  className = "",
+  dynamicHeight = false
 }: ConversationHistoryProps) {
   return (
-    <Card className={`border border-gray-200 ${className}`}>
-      <CardBody className="p-0">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-gray-200">
-          <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            💬 Historial de Conversación
-            <span className="text-xs text-gray-500">({messages.length} mensajes)</span>
+    <Card className={`border border-gray-200 ${dynamicHeight ? 'flex flex-col' : ''} ${className}`}>
+      <CardBody className={`p-0 ${dynamicHeight ? 'flex flex-col flex-1' : ''}`}>
+        <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-3 border-b border-gray-200">
+          <h4 className="text-sm font-semibold text-purple-700 flex items-center gap-2">
+            📝 Historial
+            <span className="text-xs text-purple-600 bg-purple-200 px-2 py-1 rounded-full">
+              {messages.length}
+            </span>
           </h4>
         </div>
         
-        <ScrollShadow className="h-48 p-3">
+        <ScrollShadow 
+          className={`${dynamicHeight ? 'h-full' : 'h-48'} p-3`} 
+          hideScrollBar
+        >
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">
               <div className="text-center">

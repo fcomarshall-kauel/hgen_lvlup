@@ -157,22 +157,7 @@ export default function ConversationStatus({
           </div>
         )}
 
-        {/* Last Transcript - Compact horizontal */}
-        {lastTranscript && !isUserTalking && !isAvatarTalking && (
-          <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <div className="flex items-start gap-2">
-              <span className="text-blue-600 text-xs mt-0.5">💬</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-blue-700 font-medium mb-1">
-                  {isProcessing ? "Pregunta actual:" : "Última pregunta:"}
-                </p>
-                <p className="text-sm text-blue-800 leading-relaxed truncate">
-                  "{lastTranscript}"
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     );
   };

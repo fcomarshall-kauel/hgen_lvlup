@@ -21,10 +21,10 @@ export default function UITestPage() {
   // Simulation states
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [chatMode, setChatMode] = useState<'text_mode' | 'voice_mode'>('text_mode');
+  const [chatMode, setChatMode] = useState<'text_mode' | 'voice_mode'>('voice_mode');
   
   // Conversation states
-  const [isVoiceChatActive, setIsVoiceChatActive] = useState(false);
+  const [isVoiceChatActive, setIsVoiceChatActive] = useState(true);
   const [isUserTalking, setIsUserTalking] = useState(false);
   const [isAvatarTalking, setIsAvatarTalking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -228,23 +228,70 @@ export default function UITestPage() {
       setIsUserTalking(false);
       setLastTranscript(randomTranscript); // Update transcript when user stops talking
       
+      // Add user message to history
+      addToHistory('user', randomTranscript);
+      
       // Start processing after user stops talking
       setIsProcessing(true);
       setTimeout(() => {
         setIsProcessing(false);
-      }, 2000);
+        setIsAvatarTalking(true);
+        
+        // Generate avatar response
+        const avatarResponses = [
+          "Entiendo tu pregunta. Déjame ayudarte con esa información sobre la Universidad de Tarapacá.",
+          "Esa es una excelente consulta. Te proporciono la respuesta completa sobre nuestros programas académicos.",
+          "Perfecto, puedo orientarte sobre ese tema específico. La UTA ofrece diversas opciones.",
+          "Es una pregunta muy común entre los estudiantes. Te explico todos los detalles relevantes.",
+          "Me alegra que preguntes sobre eso. Aquí tienes la información actualizada que necesitas."
+        ];
+        const randomResponse = avatarResponses[Math.floor(Math.random() * avatarResponses.length)];
+        
+        // Set current avatar message for real-time display
+        setCurrentAvatarMessage(randomResponse);
+        
+        // Add avatar response to history
+        addToHistory('avatar', randomResponse);
+        
+        // Avatar talks for 3-5 seconds
+        const talkDuration = 3000 + Math.random() * 2000;
+        setTimeout(() => {
+          setIsAvatarTalking(false);
+          setCurrentAvatarMessage(""); // Clear current message when done talking
+        }, talkDuration);
+      }, 1500 + Math.random() * 1000);
     }, 3000);
   };
 
   const simulateAvatarTalking = () => {
+    if (isUserTalking || isAvatarTalking || isProcessing) return;
+    
     setIsAvatarTalking(true);
+    
+    // Generate avatar response
+    const avatarResponses = [
+      "¡Hola! ¿En qué puedo ayudarte hoy con información sobre la Universidad de Tarapacá?",
+      "Estoy aquí para responder todas tus consultas académicas. ¿Qué te interesa saber?",
+      "Como asistente virtual de la UTA, puedo orientarte sobre carreras, admisiones y más.",
+      "¿Tienes alguna pregunta específica sobre nuestros programas o servicios universitarios?",
+      "Es un gusto poder ayudarte. ¿Sobre qué tema de la universidad necesitas información?"
+    ];
+    const randomResponse = avatarResponses[Math.floor(Math.random() * avatarResponses.length)];
+    
+    // Set current avatar message for real-time display
+    setCurrentAvatarMessage(randomResponse);
+    
+    // Add avatar message to history
+    addToHistory('avatar', randomResponse);
+    
     setTimeout(() => {
       setIsAvatarTalking(false);
-    }, 4000);
+      setCurrentAvatarMessage(""); // Clear current message when done talking
+    }, 3000 + Math.random() * 2000);
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 overflow-hidden flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex flex-col">
       {/* Header */}
       <header className="bg-gradient-to-r from-purple-800 via-purple-700 to-pink-700 text-white shadow-lg flex-shrink-0">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -263,11 +310,11 @@ export default function UITestPage() {
       <div className="flex-1 flex">
         {/* Main Avatar Area */}
         <main className="flex-1 max-w-4xl mx-auto px-6 py-6 flex flex-col justify-center items-center">
-          <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden w-full">
-            <Card className="border-2 border-purple-200 shadow-lg">
-              <CardBody className="h-[380px] flex flex-col justify-center items-center bg-gradient-to-br from-purple-50 to-pink-50 relative">
+          <div className="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden w-full h-full flex flex-col">
+            <Card className="border-2 border-purple-200 shadow-lg h-full flex flex-col">
+              <CardBody className="min-h-[300px] h-[40vh] flex flex-col justify-center items-center bg-gradient-to-br from-purple-50 to-pink-50 relative flex-shrink-0">
                 {isSessionActive ? (
-                  <div className="h-[380px] w-full justify-center items-center flex rounded-lg overflow-hidden border-4 border-purple-300 shadow-inner relative">
+                                      <div className="h-full w-full justify-center items-center flex rounded-lg overflow-hidden border-4 border-purple-300 shadow-inner relative">
                     {/* Mock Video */}
                     <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center text-white">
                       <div className="text-center">
@@ -357,69 +404,95 @@ export default function UITestPage() {
               
               <Divider className="bg-purple-200" />
               
-              <CardFooter className="flex flex-col gap-1 relative bg-gradient-to-br from-purple-50 to-white py-2">
-                {/* Mode control */}
-                <div className="bg-white p-2 rounded-lg shadow border border-gray-200 mb-1 w-full">
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="text-xs font-medium text-gray-700">Modo:</span>
-                    <div className="flex">
-                      <button
-                        onClick={() => handleModeChange('text_mode')}
-                        className={`py-1 px-3 text-xs font-medium rounded-l-lg border transition-colors ${
-                          chatMode === "text_mode"
-                            ? "bg-purple-600 text-white border-purple-600"
-                            : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                        }`}
-                      >
-                        💬 Texto
-                      </button>
-                      <button
-                        onClick={() => handleModeChange('voice_mode')}
-                        className={`py-1 px-3 text-xs font-medium rounded-r-lg border-l-0 border transition-colors ${
-                          chatMode === "voice_mode"
-                            ? "bg-purple-600 text-white border-purple-600"
-                            : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                        }`}
-                        disabled={!isSessionActive}
-                      >
-                        🎤 Voz Continua
-                      </button>
+              <CardFooter className="flex flex-col gap-3 relative bg-gradient-to-br from-purple-50 to-white p-4 flex-1 overflow-hidden">
+                {/* Status Panel - Single container */}
+                <div className="bg-white p-3 rounded-lg shadow border border-gray-200">
+                  <div className="flex items-center justify-between gap-4">
+                    {/* Mode selector */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium text-gray-700">Modo:</span>
+                      <div className="flex">
+                        <button
+                          onClick={() => handleModeChange('voice_mode')}
+                          className={`py-1.5 px-3 text-xs font-medium rounded-l-lg border transition-colors ${
+                            chatMode === "voice_mode"
+                              ? "bg-purple-600 text-white border-purple-600"
+                              : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                          }`}
+                          disabled={!isSessionActive}
+                        >
+                          🎤 Conversación
+                        </button>
+                        <button
+                          onClick={() => handleModeChange('text_mode')}
+                          className={`py-1.5 px-3 text-xs font-medium rounded-r-lg border-l-0 border transition-colors ${
+                            chatMode === "text_mode"
+                              ? "bg-purple-600 text-white border-purple-600"
+                              : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                          }`}
+                        >
+                          💬 Texto
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Status indicator */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        isUserTalking ? 'bg-red-500 animate-pulse' :
+                        isAvatarTalking ? 'bg-blue-500 animate-pulse' :
+                        isProcessing ? 'bg-yellow-500 animate-pulse' :
+                        isSessionActive ? 'bg-green-500' :
+                        'bg-gray-300'
+                      }`}></div>
+                      <span className="text-xs text-gray-600 font-medium">
+                        {isUserTalking ? 'Usuario hablando' :
+                         isAvatarTalking ? 'Avatar respondiendo' :
+                         isProcessing ? 'Procesando...' :
+                         isSessionActive ? 'Conversación activa' :
+                         'En espera'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Content based on mode */}
-                <div className="space-y-3">
-                  {chatMode === "voice_mode" ? (
-                    <ConversationStatus
-                      isVoiceChatActive={isVoiceChatActive}
-                      isUserTalking={isUserTalking}
-                      isAvatarTalking={isAvatarTalking}
-                      isProcessing={isProcessing}
-                      lastTranscript={lastTranscript}
-                      currentAvatarMessage={currentAvatarMessage}
-                      chatMode={chatMode}
-                      mode="panel"
+                {/* Mode-specific content - Text mode only */}
+                {chatMode === "text_mode" && (
+                  <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
+                    <InteractiveAvatarTextInput
+                      disabled={!isSessionActive}
+                      input={text}
+                      label="Texto de prueba"
+                      loading={isAvatarTalking}
+                      placeholder="Escribe algo para probar..."
+                      setInput={setText}
+                      onSubmit={handleSpeak}
+                    />
+                  </div>
+                )}
+
+                {/* Conversation History - Full width with dynamic height */}
+                <div className="flex-1 flex flex-col min-h-0">
+                  {conversationHistory.length > 0 ? (
+                    <ConversationHistory 
+                      messages={[...conversationHistory].reverse()}
+                      className="w-full flex-1"
+                      dynamicHeight={true}
                     />
                   ) : (
-                    <div className="w-full flex relative">
-                      <InteractiveAvatarTextInput
-                        disabled={!isSessionActive}
-                        input={text}
-                        label="Texto de prueba"
-                        loading={isAvatarTalking}
-                        placeholder="Escribe algo para probar..."
-                        setInput={setText}
-                        onSubmit={handleSpeak}
-                      />
-                    </div>
+                    isSessionActive && (
+                      <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-6 text-center flex-1 flex flex-col justify-center">
+                        <div className="text-2xl mb-2">💭</div>
+                        <p className="text-sm text-gray-600 mb-1">No hay conversación aún</p>
+                        <p className="text-xs text-gray-500">
+                          {chatMode === 'voice_mode' 
+                            ? 'Usa los controles de voz para comenzar una conversación'
+                            : 'Escribe un mensaje para comenzar'
+                          }
+                        </p>
+                      </div>
+                    )
                   )}
-                  
-                  {/* Conversation History - Always visible for debugging */}
-                  <ConversationHistory 
-                    messages={conversationHistory}
-                    className="w-full"
-                  />
                 </div>
               </CardFooter>
             </Card>

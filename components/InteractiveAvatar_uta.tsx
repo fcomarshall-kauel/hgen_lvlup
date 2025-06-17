@@ -70,9 +70,7 @@ export default function InteractiveAvatarUta() {
         throw new Error("Avatar not available");
       }
 
-      await avatar.current.startVoiceChat({
-        useSilencePrompt: true
-      });
+      await avatar.current.startVoiceChat();
       setIsVoiceChatActive(true);
       console.log("✅ Voice chat started");
       return true;

@@ -55,7 +55,11 @@ export default function ConversationStatus({
         <div className="absolute bottom-16 left-2 right-2 p-3 bg-black bg-opacity-70 text-white rounded-lg z-10">
           <p className="text-sm">
             <span className="text-red-300 animate-pulse">🎤 </span>
-            <span className="text-gray-300 animate-pulse">Hablando...</span>
+            {lastTranscript && lastTranscript.trim() ? (
+              <span className="text-white">{lastTranscript}</span>
+            ) : (
+              <span className="text-gray-300 animate-pulse">Escuchando...</span>
+            )}
           </p>
         </div>
       );

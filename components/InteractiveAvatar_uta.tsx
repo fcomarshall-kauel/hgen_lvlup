@@ -30,6 +30,15 @@ export default function InteractiveAvatarUta() {
   const [stream, setStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
   
+  // Unique ID generator to avoid duplicate keys
+  const messageIdCounter = useRef(0);
+  
+  // Use ref for current avatar message to avoid closure issues
+  const currentAvatarMessage = useRef<string>("");
+  const lastMessageTime = useRef<number>(0);
+  const currentUserMessage = useRef<string>("");
+  const lastUserStartTime = useRef<number>(0);
+  
   // Pre-configured values for UTA
   const [knowledgeId, setKnowledgeId] = useState<string>("6c3a2a0696a747d0aaac390f3f6910ec"); // Tara UTA
   const [avatarId, setAvatarId] = useState<string>("Marianne_Chair_Sitting_public"); // Mujer Oficina
@@ -49,18 +58,17 @@ export default function InteractiveAvatarUta() {
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
 
   const addToHistory = (type: 'user' | 'avatar', content: string) => {
+    messageIdCounter.current += 1;
+    const uniqueId = `${Date.now()}-${messageIdCounter.current}`;
+    
     const newMessage: ConversationMessage = {
-      id: Date.now().toString(),
+      id: uniqueId,
       type,
       content,
       timestamp: new Date()
     };
-    console.log('🔥 Adding to history:', { type, content, id: newMessage.id });
-    setConversationHistory(prev => {
-      const updated = [...prev, newMessage];
-      console.log('📝 Updated history:', updated);
-      return updated;
-    });
+    
+    setConversationHistory(prev => [...prev, newMessage]);
   };
 
   async function fetchAccessToken() {
@@ -69,7 +77,6 @@ export default function InteractiveAvatarUta() {
         method: "POST",
       });
       const token = await response.text();
-      console.log("Access Token:", token);
       return token;
     } catch (error) {
       console.error("Error fetching access token:", error);
@@ -79,15 +86,24 @@ export default function InteractiveAvatarUta() {
 
   async function startVoiceChat() {
     try {
-      console.log("🎤 Starting voice chat...");
-      
       if (!avatar.current) {
         throw new Error("Avatar not available");
       }
 
-      await avatar.current.startVoiceChat();
+      // Check for microphone permissions
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+      } catch (permError) {
+        console.error("❌ Microphone permission denied:", permError);
+        return false;
+      }
+
+      await avatar.current.startVoiceChat({
+        useSilencePrompt: false
+      });
       setIsVoiceChatActive(true);
-      console.log("✅ Voice chat started");
+      console.log("✅ Voice chat activated");
       return true;
     } catch (error) {
       console.error("❌ Error starting voice chat:", error);
@@ -98,8 +114,6 @@ export default function InteractiveAvatarUta() {
 
   async function stopVoiceChat() {
     try {
-      console.log("🛑 Stopping voice chat...");
-      
       if (avatar.current) {
         await avatar.current.closeVoiceChat();
       }
@@ -107,7 +121,6 @@ export default function InteractiveAvatarUta() {
       setIsVoiceChatActive(false);
       setIsUserTalking(false);
       setLastTranscript("");
-      console.log("✅ Voice chat stopped");
     } catch (error) {
       console.error("❌ Error stopping voice chat:", error);
     }
@@ -123,21 +136,33 @@ export default function InteractiveAvatarUta() {
 
     // Set up event listeners
     avatar.current.on(StreamingEvents.AVATAR_START_TALKING, (e) => {
-      console.log("Avatar started talking", e);
       setIsAvatarTalking(true);
     });
     
     avatar.current.on(StreamingEvents.AVATAR_STOP_TALKING, (e) => {
-      console.log("Avatar stopped talking", e);
       setIsAvatarTalking(false);
+      
+      // Add complete avatar message to history when it finishes talking
+      if (currentAvatarMessage.current.trim()) {
+        console.log("🤖 Avatar response:", currentAvatarMessage.current.trim());
+        addToHistory('avatar', currentAvatarMessage.current.trim());
+        currentAvatarMessage.current = "";
+      }
     });
 
-    // Capture avatar responses
+    // Accumulate avatar message chunks (don't add to history yet)
     avatar.current.on(StreamingEvents.AVATAR_TALKING_MESSAGE, (event) => {
-      console.log('Avatar talking message:', event);
       if (event.detail && event.detail.message) {
-        // Add avatar response to history when it finishes talking
-        addToHistory('avatar', event.detail.message);
+        const now = Date.now();
+        
+        // If more than 3 seconds have passed since last chunk, start new message
+        if (now - lastMessageTime.current > 3000 && currentAvatarMessage.current.trim()) {
+          addToHistory('avatar', currentAvatarMessage.current.trim());
+          currentAvatarMessage.current = "";
+        }
+        
+        currentAvatarMessage.current += event.detail.message;
+        lastMessageTime.current = now;
       }
     });
     
@@ -151,34 +176,47 @@ export default function InteractiveAvatarUta() {
       setStream(event.detail);
     });
 
-    // Simplified user talking events
+    // User talking events
     avatar.current.on(StreamingEvents.USER_TALKING_MESSAGE, (event) => {
-      console.log('User talking:', event);
-      if (event.detail && event.detail.message) {
+      const message = event.detail?.message || event.detail?.text || event.detail?.transcript;
+      
+      if (message) {
+        console.log('👤 USER_TALKING_MESSAGE:', message);
         setIsUserTalking(true);
-        setLastTranscript(event.detail.message);
+        setLastTranscript(message);
+        currentUserMessage.current = message; // Store for later use
+      } else {
+        console.log('⚠️ USER_TALKING_MESSAGE - no content');
       }
     });
 
     avatar.current.on(StreamingEvents.USER_END_MESSAGE, (event) => {
-      console.log('User finished talking:', event);
+      console.log('📝 USER_END_MESSAGE triggered');
       setIsUserTalking(false);
-      if (event.detail && event.detail.message) {
-        setLastTranscript(event.detail.message);
-        // Add user message to history
-        addToHistory('user', event.detail.message);
-        // The avatar will automatically respond based on knowledgeId
-        // No need to manually call speak() here
+      
+      // Use the message stored from USER_TALKING_MESSAGE
+      if (currentUserMessage.current.trim()) {
+        console.log('👤 USER_MESSAGE_FINAL:', currentUserMessage.current);
+        addToHistory('user', currentUserMessage.current);
+        console.log('✅ Added to history');
+        currentUserMessage.current = ""; // Clear after use
+      } else {
+        console.log('⚠️ No user message to add to history');
       }
     });
 
     avatar.current.on(StreamingEvents.USER_START, (event) => {
-      console.log('User started interaction:', event);
+      const now = Date.now();
+      // Only log if it's been more than 500ms since last start (avoid spam)
+      if (now - lastUserStartTime.current > 500) {
+        console.log('🎤 USER_START');
+      }
+      lastUserStartTime.current = now;
       setIsUserTalking(true);
+      setLastTranscript(""); // Clear previous transcript when starting new speech
     });
 
     avatar.current.on(StreamingEvents.USER_STOP, (event) => {
-      console.log('User stopped interaction:', event);
       setIsUserTalking(false);
     });
 
@@ -199,6 +237,15 @@ export default function InteractiveAvatarUta() {
       setData(res);
       console.log("✅ Avatar session created:", res);
       
+      // Start voice chat automatically if in voice mode
+      if (chatMode === 'voice_mode') {
+        console.log("🎤 Auto-starting voice chat for voice mode...");
+        const voiceChatStarted = await startVoiceChat();
+        if (!voiceChatStarted) {
+          console.log("⚠️ Voice chat failed to start, but continuing with session");
+        }
+      }
+      
       // Welcome message using REPEAT to avoid knowledge base interference
       const welcomeMessage = "¡Hola! Soy Tara, tu asistente virtual de la Universidad de Tarapacá. Es un gusto conocerte. Estoy aquí para apoyarte en tu formación académica y resolver cualquier consulta que tengas sobre nuestros programas, servicios universitarios y vida estudiantil. ¿En qué puedo ayudarte hoy?";
       
@@ -208,7 +255,7 @@ export default function InteractiveAvatarUta() {
         taskMode: TaskMode.SYNC
       });
       
-      // Add welcome message to history
+      // Add welcome message to history manually (since REPEAT doesn't trigger talking events)
       addToHistory('avatar', welcomeMessage);
       
     } catch (error) {
@@ -270,6 +317,9 @@ export default function InteractiveAvatarUta() {
       setDebug("");
       setConversationHistory([]); // Clear conversation history
       setLastTranscript(""); // Clear last transcript
+      currentAvatarMessage.current = ""; // Clear current avatar message
+      currentUserMessage.current = ""; // Clear current user message
+      messageIdCounter.current = 0; // Reset counter
     } catch (error) {
       console.error("Error ending session:", error);
     }
@@ -313,7 +363,7 @@ export default function InteractiveAvatarUta() {
   return (
     <div className="w-full h-full flex flex-col">
       <Card className="border-2 border-blue-200 shadow-lg h-full flex flex-col">
-        <CardBody className="min-h-[300px] h-[40vh] max-h-[500px] flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-indigo-50 relative flex-shrink-0">
+        <CardBody className="min-h-[250px] h-[35vh] max-h-[400px] flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 to-indigo-50 relative flex-shrink-0">
           {stream ? (
             <div className="h-full w-full justify-center items-center flex rounded-lg overflow-hidden border-4 border-blue-300 shadow-inner">
               <video
@@ -358,6 +408,8 @@ export default function InteractiveAvatarUta() {
                 chatMode={chatMode}
                 mode="overlay"
               />
+              
+
             </div>
           ) : !isLoadingSession ? (
             <div className="h-full justify-center items-center flex flex-col gap-3 w-[400px] self-center">
@@ -404,41 +456,41 @@ export default function InteractiveAvatarUta() {
           )}
         </CardBody>
         <Divider className="bg-blue-200" />
-        <CardFooter className="flex flex-col gap-3 relative bg-gradient-to-br from-blue-50 to-white p-4 flex-1 overflow-hidden">
-          {/* Status Panel - Single container */}
-          <div className="bg-white p-3 rounded-lg shadow border border-gray-200">
-            <div className="flex items-center justify-between gap-4">
-              {/* Mode selector */}
-              <div className="flex items-center gap-3">
+        <CardFooter className="flex flex-col gap-2 relative bg-gradient-to-br from-blue-50 to-white p-3 flex-1 overflow-hidden">
+          {/* Status Panel - Compact */}
+          <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between gap-3">
+              {/* Mode selector - Compact */}
+              <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-gray-700">Modo:</span>
                 <div className="flex">
                   <button
                     onClick={() => handleChangeChatMode("voice_mode")}
-                    className={`py-1.5 px-3 text-xs font-medium rounded-l-lg border transition-colors ${
+                    className={`py-1 px-2 text-xs font-medium rounded-l-md border transition-colors ${
                       chatMode === "voice_mode"
                         ? "bg-blue-600 text-white border-blue-600"
                         : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                     }`}
                     disabled={!stream}
                   >
-                    🎤 Conversación
+                    🎤
                   </button>
                   <button
                     onClick={() => handleChangeChatMode("text_mode")}
-                    className={`py-1.5 px-3 text-xs font-medium rounded-r-lg border-l-0 border transition-colors ${
+                    className={`py-1 px-2 text-xs font-medium rounded-r-md border-l-0 border transition-colors ${
                       chatMode === "text_mode"
                         ? "bg-blue-600 text-white border-blue-600"
                         : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                     }`}
                   >
-                    💬 Texto
+                    💬
                   </button>
                 </div>
               </div>
 
-              {/* Status indicator */}
+              {/* Status indicator - Compact */}
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${
+                <div className={`w-2.5 h-2.5 rounded-full ${
                   isUserTalking ? 'bg-red-500 animate-pulse' :
                   isAvatarTalking ? 'bg-blue-500 animate-pulse' :
                   isProcessing ? 'bg-yellow-500 animate-pulse' :
@@ -446,11 +498,11 @@ export default function InteractiveAvatarUta() {
                   'bg-gray-300'
                 }`}></div>
                 <span className="text-xs text-gray-600 font-medium">
-                  {isUserTalking ? 'Usuario hablando' :
-                   isAvatarTalking ? 'Tara respondiendo' :
-                   isProcessing ? 'Procesando...' :
-                   stream ? 'Conversación activa' :
-                   'Conectando...'}
+                  {isUserTalking ? 'Hablando' :
+                   isAvatarTalking ? 'Tara responde' :
+                   isProcessing ? 'Procesando' :
+                   stream ? 'Activa' :
+                   'Conectando'}
                 </span>
               </div>
             </div>
@@ -458,7 +510,7 @@ export default function InteractiveAvatarUta() {
 
           {/* Mode-specific content - Text mode only */}
           {chatMode === "text_mode" && (
-            <div className="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
               <InteractiveAvatarTextInput
                 disabled={!stream}
                 input={text}
@@ -471,6 +523,8 @@ export default function InteractiveAvatarUta() {
             </div>
           )}
           
+
+          
           {/* Conversation History - Full width with dynamic height */}
           <div className="flex-1 flex flex-col min-h-0">
             {conversationHistory.length > 0 ? (
@@ -481,12 +535,12 @@ export default function InteractiveAvatarUta() {
               />
             ) : (
               stream && (
-                <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-6 text-center flex-1 flex flex-col justify-center">
-                  <div className="text-2xl mb-2">💭</div>
+                <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-4 text-center flex-1 flex flex-col justify-center">
+                  <div className="text-xl mb-2">💭</div>
                   <p className="text-sm text-gray-600 mb-1">No hay conversación aún</p>
                   <p className="text-xs text-gray-500">
                     {chatMode === 'voice_mode' 
-                      ? 'Usa la conversación de voz para hablar con Tara'
+                      ? 'Habla con Tara usando tu micrófono'
                       : 'Escribe una pregunta para comenzar'
                     }
                   </p>

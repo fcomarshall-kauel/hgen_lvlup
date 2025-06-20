@@ -99,9 +99,7 @@ export default function InteractiveAvatarUta() {
         return false;
       }
 
-      await avatar.current.startVoiceChat({
-        useSilencePrompt: false
-      });
+      await avatar.current.startVoiceChat();
       setIsVoiceChatActive(true);
       console.log("✅ Voice chat activated");
       return true;

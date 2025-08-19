@@ -38,7 +38,7 @@ export default function ConversationStatus({
         <span className="text-white text-sm">
           {isUserTalking ? '🎤 Escuchando...' : 
            isProcessing ? '🤔 Procesando...' :
-           isAvatarTalking ? '🗣️ Tara hablando...' :
+           isAvatarTalking ? '🗣️ Asistente hablando...' :
            '✅ Conversación activa'}
         </span>
       </div>

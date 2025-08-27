@@ -390,6 +390,16 @@ export default function InteractiveAvatarGP({
   // Dynamic CSS classes based on color props
   const getGradientClass = (type: 'primary' | 'secondary') => {
     const colors = type === 'primary' ? primaryColor : secondaryColor;
+    
+    // Handle specific color cases for better Tailwind compatibility
+    if (colors === 'red') {
+      return 'bg-gradient-to-tr from-red-600 to-red-600';
+    } else if (colors === 'blue') {
+      return 'bg-gradient-to-tr from-blue-600 to-indigo-600';
+    } else if (colors === 'purple') {
+      return 'bg-gradient-to-tr from-purple-600 to-purple-600';
+    }
+    
     return `bg-gradient-to-tr from-${colors}-600 to-${colors === 'blue' ? 'indigo' : colors}-600`;
   };
 

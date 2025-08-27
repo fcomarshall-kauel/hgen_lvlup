@@ -40,7 +40,7 @@ export default function BancoRipleyIA() {
             avatarName="Fabián"
             institutionName="Banco Ripley"
             avatarImage="/fabian_pic.png"
-            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual de Banco Ripley. Es un gusto conocerte. Estoy aquí para ayudarte"
+            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual de Banco Ripley. Es un gusto conocerte. Estoy aquí para ayudarte con tus preguntas financieras."
             primaryColor="purple"
             secondaryColor="violet"
             backgroundColor="purple"

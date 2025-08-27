@@ -40,7 +40,7 @@ export default function ScotiabankIA() {
             avatarName="Fabián"
             institutionName="Scotiabank"
             avatarImage="/fabian_pic.png"
-            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual de Scotiabank. Es un gusto conocerte. Estoy aquí para ayudarte"
+            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual de Scotiabank. Es un gusto conocerte. Estoy aquí para ayudarte con tus preguntas financieras."
             primaryColor="red"
             secondaryColor="rose"
             backgroundColor="red"

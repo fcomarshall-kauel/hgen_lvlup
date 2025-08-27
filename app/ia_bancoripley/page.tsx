@@ -33,7 +33,7 @@ export default function BancoRipleyIA() {
         {/* Componente principal del avatar */}
         <div className="bg-white rounded-xl shadow-xl border border-purple-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
           <InteractiveAvatarGP
-            knowledgeId="974ba4ab9b80424babe5c757ea50167e"
+            knowledgeId="5f63a1812a864e4b9c3a42c650c336e1"
             avatarId="Silas_CustomerSupport_public"
             voiceId="05e192129b6b466493886273f8c23f78"
             language="es"

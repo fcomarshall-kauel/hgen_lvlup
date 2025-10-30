@@ -398,6 +398,14 @@ export default function InteractiveAvatarGP({
       return 'bg-gradient-to-tr from-blue-600 to-indigo-600';
     } else if (colors === 'purple') {
       return 'bg-gradient-to-tr from-purple-600 to-purple-600';
+    } else if (colors === 'green') {
+      return 'bg-gradient-to-tr from-green-600 to-emerald-600';
+    } else if (colors === 'sky') {
+      return 'bg-gradient-to-tr from-sky-600 to-blue-600';
+    } else if (colors === 'teal') {
+      return 'bg-gradient-to-tr from-teal-600 to-cyan-600';
+    } else if (colors === 'cyan') {
+      return 'bg-gradient-to-tr from-cyan-600 to-teal-600';
     }
     
     return `bg-gradient-to-tr from-${colors}-600 to-${colors === 'blue' ? 'indigo' : colors}-600`;

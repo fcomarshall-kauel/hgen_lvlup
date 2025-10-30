@@ -3,6 +3,35 @@
 import InteractiveAvatarGP from "@/components/InteractiveAvatar_GP";
 import Image from "next/image";
 
+// ============================================
+// PARÁMETROS DE CONFIGURACIÓN - EDITAR AQUÍ
+// ============================================
+const CONFIG = {
+  // Títulos del Header
+  titulo: "Simulador de Ventas",
+  subtitulo: "Practica y mejora tus técnicas de Venta",
+  
+  // Configuración del Avatar
+  knowledgeId: "b32feca4aa0c4e7383971f1a38d1af9a",
+  avatarId: "Silas_CustomerSupport_public",
+  voiceId: "05e192129b6b466493886273f8c23f78",
+  language: "es",
+  avatarName: "Coach Ventas",
+  institutionName: "Simulador para Técnicas de Venta",
+  avatarImage: "/fabian_pic.png",
+  welcomeMessage: "Hola soy tu coach-tutor dinámico de SPIN Selling y Simuliación de Ventas, ¿todo listo para comenzar la simulación?",
+  
+  // Textos de la interfaz
+  placeholderText: "Describe el escenario que quieres practicar...",
+  buttonText: "🎯 Comenzar Práctica de Ventas",
+  
+  // Colores
+  primaryColor: "purple",
+  secondaryColor: "indigo",
+  backgroundColor: "purple",
+};
+// ============================================
+
 export default function CommunicationSimulator() {
   return (
     <div className="h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 overflow-hidden flex flex-col">
@@ -28,9 +57,9 @@ export default function CommunicationSimulator() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                  Simulador de Habilidades Comunicacionales
+                  {CONFIG.titulo}
                 </h1>
-                <p className="text-gray-600 text-sm">Practica y mejora tu comunicación interpersonal</p>
+                <p className="text-gray-600 text-sm">{CONFIG.subtitulo}</p>
               </div>
             </div>
           </div>
@@ -43,19 +72,19 @@ export default function CommunicationSimulator() {
         {/* Componente principal del avatar */}
         <div className="bg-white rounded-xl shadow-xl border border-purple-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
           <InteractiveAvatarGP
-            knowledgeId="b32feca4aa0c4e7383971f1a38d1af9a"
-            avatarId="Silas_CustomerSupport_public"
-            voiceId="05e192129b6b466493886273f8c23f78"
-            language="es"
-            avatarName="Coach Virtual"
-            institutionName="Simulador de Comunicación"
-            avatarImage="/fabian_pic.png"
-            welcomeMessage="Hola soy tu coach-tutor dinámico de SPIN Selling y Simuliación de Ventas,todo listo para comenzar la simulación?"
-            primaryColor="purple"
-            secondaryColor="indigo"
-            backgroundColor="purple"
-            placeholderText="Describe el escenario que quieres practicar..."
-            buttonText="🎯 Comenzar Práctica de Comunicación"
+            knowledgeId={CONFIG.knowledgeId}
+            avatarId={CONFIG.avatarId}
+            voiceId={CONFIG.voiceId}
+            language={CONFIG.language}
+            avatarName={CONFIG.avatarName}
+            institutionName={CONFIG.institutionName}
+            avatarImage={CONFIG.avatarImage}
+            welcomeMessage={CONFIG.welcomeMessage}
+            primaryColor={CONFIG.primaryColor}
+            secondaryColor={CONFIG.secondaryColor}
+            backgroundColor={CONFIG.backgroundColor}
+            placeholderText={CONFIG.placeholderText}
+            buttonText={CONFIG.buttonText}
           />
         </div>
       </main>

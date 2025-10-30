@@ -494,7 +494,7 @@ export default function InteractiveAvatarGP({
                 )}
                 <h3 className={`text-base font-bold text-${primaryColor}-800 mb-1`}>Conoce a {avatarName}</h3>
                 <p className={`text-${primaryColor}-600 text-xs leading-relaxed max-w-xs mx-auto`}>
-                  Tu asistente virtual especializado para ayudarte con todas tus consultas.
+                  Tu asistente virtual especializado.
                 </p>
               </div>
               

@@ -45,6 +45,12 @@ interface InteractiveAvatarGPProps {
   // Text customization
   placeholderText?: string;
   buttonText?: string;
+  
+  // Initial prompt for setup
+  initialPrompt?: string;
+  
+  // Callback when session ends
+  onSessionEnd?: () => void;
 }
 
 export default function InteractiveAvatarGP({
@@ -60,7 +66,9 @@ export default function InteractiveAvatarGP({
   secondaryColor = 'indigo',
   backgroundColor = 'blue',
   placeholderText,
-  buttonText
+  buttonText,
+  initialPrompt,
+  onSessionEnd
 }: InteractiveAvatarGPProps) {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
   const [isLoadingRepeat, setIsLoadingRepeat] = useState(false);
@@ -285,6 +293,21 @@ export default function InteractiveAvatarGP({
       // Add welcome message to history manually (since REPEAT doesn't trigger talking events)
       addToHistory('avatar', welcomeMessage);
       
+      // Send initial prompt if provided (as TALK so knowledge base processes it)
+      if (initialPrompt && initialPrompt.trim()) {
+        console.log("📝 Sending initial setup prompt:", initialPrompt);
+        
+        // Add the setup prompt to history as a user message
+        addToHistory('user', initialPrompt);
+        
+        // Send to avatar to process with knowledge base
+        await avatar.current.speak({ 
+          text: initialPrompt, 
+          taskType: TaskType.TALK, 
+          taskMode: TaskMode.SYNC 
+        });
+      }
+      
     } catch (error) {
       console.error("Error starting avatar session:", error);
       setDebug(`Session error: ${error}`);
@@ -333,7 +356,7 @@ export default function InteractiveAvatarGP({
     }
   }
 
-  async function endSession() {
+  async function endSession(callCallback: boolean = false) {
     try {
       if (isVoiceChatActive) {
         await stopVoiceChat();
@@ -347,6 +370,11 @@ export default function InteractiveAvatarGP({
       currentAvatarMessage.current = ""; // Clear current avatar message
       currentUserMessage.current = ""; // Clear current user message
       messageIdCounter.current = 0; // Reset counter
+      
+      // Call the callback only if explicitly requested (user clicked "Terminar")
+      if (callCallback && onSessionEnd) {
+        onSessionEnd();
+      }
     } catch (error) {
       console.error("Error ending session:", error);
     }
@@ -451,7 +479,7 @@ export default function InteractiveAvatarGP({
                   className="bg-gradient-to-tr from-red-500 to-red-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
                   size="sm"
                   variant="shadow"
-                  onClick={endSession}
+                  onClick={() => endSession(true)}
                 >
                   Terminar
                 </Button>

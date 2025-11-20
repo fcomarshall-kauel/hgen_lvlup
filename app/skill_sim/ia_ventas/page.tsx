@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import InteractiveAvatarGP from "@/components/InteractiveAvatar_GP";
+import { Select, SelectItem } from "@nextui-org/react";
 import Image from "next/image";
 
 // ============================================
@@ -19,7 +21,7 @@ const CONFIG = {
   avatarName: "Coach Ventas",
   institutionName: "Simulador para Técnicas de Venta",
   avatarImage: "/fabian_pic.png",
-  welcomeMessage: "Hola soy tu coach-tutor dinámico de SPIN Selling y Simuliación de Ventas, ¿todo listo para comenzar la simulación?",
+  welcomeMessage: "Hola, soy tu Coach-Tutor Dinámico de SPIN Selling y Simulación de Ventas B2B. He recibido la configuración de la simulación y estoy listo para comenzar.",
   
   // Textos de la interfaz
   placeholderText: "Describe el escenario que quieres practicar...",
@@ -33,6 +35,87 @@ const CONFIG = {
 // ============================================
 
 export default function CommunicationSimulator() {
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [initialPrompt, setInitialPrompt] = useState<string>("");
+  
+  // Estados de configuración
+  const [rolContacto, setRolContacto] = useState<string>("estrategico");
+  const [estadoAnimo, setEstadoAnimo] = useState<string>("ocupado");
+  const [escenario, setEscenario] = useState<string>("facturacion");
+  const [necesidadImplicita, setNecesidadImplicita] = useState<string>("ineficiencia");
+
+  const rolesContacto = [
+    { key: "estrategico", label: "Estratégico (CEO/CFO)" },
+    { key: "operacional", label: "Operacional (Gerente/Usuario Final)" }
+  ];
+
+  const estadosAnimo = [
+    { key: "ocupado", label: "Ocupado" },
+    { key: "frustrado", label: "Frustrado" },
+    { key: "esceptico", label: "Escéptico" }
+  ];
+
+  const escenarios = [
+    { key: "facturacion", label: "Software para Facturación en la Nube con IA" },
+    { key: "ciberseguridad", label: "Auditoría de Ciberseguridad" }
+  ];
+
+  const necesidadesImplicitas = [
+    { key: "ineficiencia", label: "Problema de Ineficiencia Operacional" },
+    { key: "costos", label: "Problema de Costos/Recursos" },
+    { key: "insatisfaccion", label: "Problema de Insatisfacción/Fricción" }
+  ];
+
+  const buildPrompt = () => {
+    const rolMap: { [key: string]: string } = {
+      estrategico: "Estratégico (CEO/CFO)",
+      operacional: "Operacional (Gerente/Usuario Final)"
+    };
+
+    const animoMap: { [key: string]: string } = {
+      ocupado: "Ocupado",
+      frustrado: "Frustrado",
+      esceptico: "Escéptico"
+    };
+
+    const escenarioMap: { [key: string]: string } = {
+      facturacion: "Software para Facturación en la Nube con IA: Solución que automatiza el proceso de facturación y ofrece análisis predictivos de liquidez",
+      ciberseguridad: "Auditoría de Ciberseguridad: Servicio de consultoría para identificar vulnerabilidades en la infraestructura TI y certificar la seguridad informática de la empresa"
+    };
+
+    const necesidadMap: { [key: string]: string } = {
+      ineficiencia: "Problema de Ineficiencia Operacional",
+      costos: "Problema de Costos/Recursos",
+      insatisfaccion: "Problema de Insatisfacción/Fricción"
+    };
+
+    return `Configuración de la simulación:
+- Rol del Contacto: ${rolMap[rolContacto]}
+- Estado de Ánimo Inicial: ${animoMap[estadoAnimo]}
+- Escenario: ${escenarioMap[escenario]}
+- Necesidad Implícita: ${necesidadMap[necesidadImplicita]}
+
+Por favor, comienza la simulación en tu rol de Comprador Simulado con estas características.`;
+  };
+
+  const handleStartSimulation = () => {
+    console.log("🚀 Iniciando simulación...");
+    const prompt = buildPrompt();
+    console.log("📝 Prompt construido:", prompt);
+    setInitialPrompt(prompt);
+    setIsConfigured(true);
+    console.log("✅ Estado actualizado a configurado");
+  };
+
+  const handleSessionEnd = () => {
+    console.log("🛑 handleSessionEnd llamado - reseteando configuración");
+    // Reset to configuration screen when session ends
+    setIsConfigured(false);
+    setInitialPrompt("");
+  };
+
+  console.log("🔍 Estado actual - isConfigured:", isConfigured, "initialPrompt:", initialPrompt ? "presente" : "vacío");
+
   return (
     <div className="h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 overflow-hidden flex flex-col">
       {/* Header Simulador de Habilidades */}
@@ -71,21 +154,154 @@ export default function CommunicationSimulator() {
       <main className="flex-1 max-w-7xl mx-auto px-6 py-6 flex flex-col h-full">
         {/* Componente principal del avatar */}
         <div className="bg-white rounded-xl shadow-xl border border-purple-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
-          <InteractiveAvatarGP
-            knowledgeId={CONFIG.knowledgeId}
-            avatarId={CONFIG.avatarId}
-            voiceId={CONFIG.voiceId}
-            language={CONFIG.language}
-            avatarName={CONFIG.avatarName}
-            institutionName={CONFIG.institutionName}
-            avatarImage={CONFIG.avatarImage}
-            welcomeMessage={CONFIG.welcomeMessage}
-            primaryColor={CONFIG.primaryColor}
-            secondaryColor={CONFIG.secondaryColor}
-            backgroundColor={CONFIG.backgroundColor}
-            placeholderText={CONFIG.placeholderText}
-            buttonText={CONFIG.buttonText}
-          />
+          {(() => {
+            console.log("🎨 Renderizando - isConfigured:", isConfigured);
+            return null;
+          })()}
+          {!isConfigured ? (
+            // Pantalla de configuración inicial
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="w-full max-w-2xl">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                    🎓 Habla con {CONFIG.avatarName}
+                  </h2>
+                  <p className="text-purple-600 text-base mb-4">{CONFIG.institutionName}</p>
+                  
+                  {CONFIG.avatarImage && (
+                    <div className="w-24 h-24 mx-auto mb-4 relative">
+                      <img
+                        src={CONFIG.avatarImage}
+                        alt={`${CONFIG.avatarName} - Asistente Virtual`}
+                        className="rounded-full object-cover border-4 border-purple-300 shadow-lg w-full h-full"
+                      />
+                    </div>
+                  )}
+                  
+                  <h3 className="text-xl font-bold text-purple-800 mb-2">
+                    Conoce a {CONFIG.avatarName}
+                  </h3>
+                  <p className="text-purple-600 text-sm leading-relaxed max-w-md mx-auto mb-8">
+                    Tu asistente virtual especializado. Configura los parámetros de la simulación SPIN.
+                  </p>
+                </div>
+
+                {/* Formulario de configuración */}
+                <div className="space-y-6 bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl border-2 border-purple-200">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      1. Rol del Contacto (Comprador Simulado)
+                    </label>
+                    <Select
+                      selectedKeys={[rolContacto]}
+                      onChange={(e) => setRolContacto(e.target.value)}
+                      placeholder="Selecciona el rol"
+                      classNames={{
+                        trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
+                      }}
+                      size="lg"
+                    >
+                      {rolesContacto.map((rol) => (
+                        <SelectItem key={rol.key} value={rol.key}>
+                          {rol.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      2. Estado de Ánimo Inicial
+                    </label>
+                    <Select
+                      selectedKeys={[estadoAnimo]}
+                      onChange={(e) => setEstadoAnimo(e.target.value)}
+                      placeholder="Selecciona el estado de ánimo"
+                      classNames={{
+                        trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
+                      }}
+                      size="lg"
+                    >
+                      {estadosAnimo.map((animo) => (
+                        <SelectItem key={animo.key} value={animo.key}>
+                          {animo.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      3. Escenario de Producto/Servicio
+                    </label>
+                    <Select
+                      selectedKeys={[escenario]}
+                      onChange={(e) => setEscenario(e.target.value)}
+                      placeholder="Selecciona el escenario"
+                      classNames={{
+                        trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
+                      }}
+                      size="lg"
+                    >
+                      {escenarios.map((esc) => (
+                        <SelectItem key={esc.key} value={esc.key}>
+                          {esc.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      4. Necesidad Implícita (P)
+                    </label>
+                    <Select
+                      selectedKeys={[necesidadImplicita]}
+                      onChange={(e) => setNecesidadImplicita(e.target.value)}
+                      placeholder="Selecciona la necesidad implícita"
+                      classNames={{
+                        trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
+                      }}
+                      size="lg"
+                    >
+                      {necesidadesImplicitas.map((necesidad) => (
+                        <SelectItem key={necesidad.key} value={necesidad.key}>
+                          {necesidad.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleStartSimulation}
+                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all text-lg hover:scale-105"
+                  >
+                    🚀 Comenzar Práctica de Ventas
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Una vez configurado, mostrar el InteractiveAvatarGP normal
+            <InteractiveAvatarGP
+              knowledgeId={CONFIG.knowledgeId}
+              avatarId={CONFIG.avatarId}
+              voiceId={CONFIG.voiceId}
+              language={CONFIG.language}
+              avatarName={CONFIG.avatarName}
+              institutionName={CONFIG.institutionName}
+              avatarImage={CONFIG.avatarImage}
+              welcomeMessage={CONFIG.welcomeMessage}
+              primaryColor={CONFIG.primaryColor}
+              secondaryColor={CONFIG.secondaryColor}
+              backgroundColor={CONFIG.backgroundColor}
+              placeholderText={CONFIG.placeholderText}
+              buttonText={CONFIG.buttonText}
+              initialPrompt={initialPrompt}
+              onSessionEnd={handleSessionEnd}
+            />
+          )}
         </div>
       </main>
 

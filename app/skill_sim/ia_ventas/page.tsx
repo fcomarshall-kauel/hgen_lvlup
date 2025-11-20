@@ -120,12 +120,12 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
     <div className="h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 overflow-hidden flex flex-col">
       {/* Header Simulador de Habilidades */}
       <header className="bg-white text-gray-900 shadow-lg flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-6 py-2">
           <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full p-3 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full p-2 shadow-lg">
                 <svg 
-                  className="w-8 h-8 text-white" 
+                  className="w-6 h-6 text-white" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -139,10 +139,10 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                   {CONFIG.titulo}
                 </h1>
-                <p className="text-gray-600 text-sm">{CONFIG.subtitulo}</p>
+                <p className="text-gray-600 text-xs">{CONFIG.subtitulo}</p>
               </div>
             </div>
           </div>
@@ -151,7 +151,7 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
       </header>
 
       {/* Contenido principal */}
-      <main className="flex-1 max-w-7xl mx-auto px-6 py-6 flex flex-col h-full">
+      <main className="flex-1 max-w-7xl mx-auto px-6 py-3 flex flex-col h-full">
         {/* Componente principal del avatar */}
         <div className="bg-white rounded-xl shadow-xl border border-purple-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
           {(() => {
@@ -160,36 +160,36 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
           })()}
           {!isConfigured ? (
             // Pantalla de configuración inicial
-            <div className="flex-1 flex items-center justify-center p-8">
+            <div className="flex-1 overflow-y-auto p-4 flex items-center justify-center">
               <div className="w-full max-w-2xl">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+                <div className="text-center mb-4">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-1">
                     🎓 Habla con {CONFIG.avatarName}
                   </h2>
-                  <p className="text-purple-600 text-base mb-4">{CONFIG.institutionName}</p>
+                  <p className="text-purple-600 text-sm mb-2">{CONFIG.institutionName}</p>
                   
                   {CONFIG.avatarImage && (
-                    <div className="w-24 h-24 mx-auto mb-4 relative">
+                    <div className="w-16 h-16 mx-auto mb-2 relative">
                       <img
                         src={CONFIG.avatarImage}
                         alt={`${CONFIG.avatarName} - Asistente Virtual`}
-                        className="rounded-full object-cover border-4 border-purple-300 shadow-lg w-full h-full"
+                        className="rounded-full object-cover border-3 border-purple-300 shadow-lg w-full h-full"
                       />
                     </div>
                   )}
                   
-                  <h3 className="text-xl font-bold text-purple-800 mb-2">
+                  <h3 className="text-lg font-bold text-purple-800 mb-1">
                     Conoce a {CONFIG.avatarName}
                   </h3>
-                  <p className="text-purple-600 text-sm leading-relaxed max-w-md mx-auto mb-8">
+                  <p className="text-purple-600 text-xs leading-relaxed max-w-md mx-auto mb-3">
                     Tu asistente virtual especializado. Configura los parámetros de la simulación SPIN.
                   </p>
                 </div>
 
                 {/* Formulario de configuración */}
-                <div className="space-y-6 bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-xl border-2 border-purple-200">
+                <div className="space-y-3 bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-xl border-2 border-purple-200">
                   <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">
                       1. Rol del Contacto (Comprador Simulado)
                     </label>
                     <Select
@@ -199,7 +199,7 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
                       classNames={{
                         trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
                       }}
-                      size="lg"
+                      size="sm"
                     >
                       {rolesContacto.map((rol) => (
                         <SelectItem key={rol.key} value={rol.key}>
@@ -210,7 +210,7 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">
                       2. Estado de Ánimo Inicial
                     </label>
                     <Select
@@ -220,7 +220,7 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
                       classNames={{
                         trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
                       }}
-                      size="lg"
+                      size="sm"
                     >
                       {estadosAnimo.map((animo) => (
                         <SelectItem key={animo.key} value={animo.key}>
@@ -231,7 +231,7 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">
                       3. Escenario de Producto/Servicio
                     </label>
                     <Select
@@ -241,7 +241,7 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
                       classNames={{
                         trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
                       }}
-                      size="lg"
+                      size="sm"
                     >
                       {escenarios.map((esc) => (
                         <SelectItem key={esc.key} value={esc.key}>
@@ -252,7 +252,7 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                    <label className="text-xs font-semibold text-gray-700 mb-1 block">
                       4. Necesidad Implícita (P)
                     </label>
                     <Select
@@ -262,7 +262,7 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
                       classNames={{
                         trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
                       }}
-                      size="lg"
+                      size="sm"
                     >
                       {necesidadesImplicitas.map((necesidad) => (
                         <SelectItem key={necesidad.key} value={necesidad.key}>
@@ -275,7 +275,7 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
                   <button
                     type="button"
                     onClick={handleStartSimulation}
-                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all text-lg hover:scale-105"
+                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all text-base hover:scale-105"
                   >
                     🚀 Comenzar Práctica de Ventas
                   </button>
@@ -306,27 +306,27 @@ Por favor, comienza la simulación en tu rol de Comprador Simulado con estas car
       </main>
 
       {/* Footer informativo */}
-      <footer className="bg-white border-t border-gray-200 py-3 flex-shrink-0">
+      <footer className="bg-white border-t border-gray-200 py-2 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-center space-x-6 text-xs text-gray-600">
-            <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-center space-x-4 text-xs text-gray-600">
+            <div className="flex items-center space-x-1">
               <span className="font-semibold text-purple-600">💬</span>
-              <span>Escucha activa</span>
+              <span className="text-[10px]">Escucha activa</span>
             </div>
-            <div className="w-1 h-4 bg-gray-300 rounded"></div>
-            <div className="flex items-center space-x-2">
+            <div className="w-1 h-3 bg-gray-300 rounded"></div>
+            <div className="flex items-center space-x-1">
               <span className="font-semibold text-purple-600">🎤</span>
-              <span>Expresión clara</span>
+              <span className="text-[10px]">Expresión clara</span>
             </div>
-            <div className="w-1 h-4 bg-gray-300 rounded"></div>
-            <div className="flex items-center space-x-2">
+            <div className="w-1 h-3 bg-gray-300 rounded"></div>
+            <div className="flex items-center space-x-1">
               <span className="font-semibold text-purple-600">🤝</span>
-              <span>Empatía</span>
+              <span className="text-[10px]">Empatía</span>
             </div>
-            <div className="w-1 h-4 bg-gray-300 rounded"></div>
-            <div className="flex items-center space-x-2">
+            <div className="w-1 h-3 bg-gray-300 rounded"></div>
+            <div className="flex items-center space-x-1">
               <span className="font-semibold text-purple-600">✨</span>
-              <span>Retroalimentación constructiva</span>
+              <span className="text-[10px]">Feedback constructivo</span>
             </div>
           </div>
         </div>

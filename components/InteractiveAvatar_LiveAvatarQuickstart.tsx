@@ -320,8 +320,8 @@ export default function InteractiveAvatarLiveAvatarQuickstart({
             }
           }}
           placeholder="Escribe tu mensaje..."
-          className="flex-1 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2"
-          style={{ border: "1px solid #d4cce8", focusRingColor: "#4126b4" }}
+          className="flex-1 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4126b4] focus:border-transparent"
+          style={{ border: "1px solid #d4cce8" }}
           disabled={!isConnected}
         />
         <button

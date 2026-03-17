@@ -30,7 +30,9 @@ export default function InteractiveAvatarCode() {
         <CardBody>
           <ReactCodeMirror
             editable={false}
-            extensions={[langs.typescript()]}
+            // Some versions of @uiw/codemirror-extensions-langs don't expose `typescript()`;
+            // `ts()` is the equivalent TypeScript mode.
+            extensions={[langs.ts()]}
             height="700px"
             theme="dark"
             value={TEXT}

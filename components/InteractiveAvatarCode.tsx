@@ -1,5 +1,4 @@
 import { Card, CardBody } from "@nextui-org/react";
-import { langs } from "@uiw/codemirror-extensions-langs";
 import ReactCodeMirror from "@uiw/react-codemirror";
 
 export default function InteractiveAvatarCode() {
@@ -30,8 +29,6 @@ export default function InteractiveAvatarCode() {
         <CardBody>
           <ReactCodeMirror
             editable={false}
-            // Use JS mode for broad compatibility across langs versions.
-            extensions={[langs.javascript()]}
             height="700px"
             theme="dark"
             value={TEXT}

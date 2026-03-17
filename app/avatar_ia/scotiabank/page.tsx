@@ -1,22 +1,29 @@
 "use client";
 
-import InteractiveAvatarGP from "@/components/InteractiveAvatar_GP";
+import Image from "next/image";
+import InteractiveAvatarLiveAvatarQuickstart from "@/components/InteractiveAvatar_LiveAvatarQuickstart";
+import { SCOTIABANK_PERSONA } from "@/app/lib/personas";
 
-export default function SantanderIA() {
+export default function ScotiabankIA() {
   return (
     <div className="h-screen bg-gradient-to-br from-red-50 via-white to-red-50 overflow-hidden flex flex-col">
-      {/* Header Santander */}
+      {/* Header Scotiabank */}
       <header className="bg-white text-gray-900 shadow-lg flex-shrink-0">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-4">
-              <img
-                alt="Logo Satander"
+              <Image
+                alt="Logo Scotiabank"
                 className="h-12 w-auto object-contain"
-                src="/Logo_Santander.png"
+                src="/scotiabank-logo-red.svg"
+                width={190}
+                height={48}
+                priority
               />
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Santander</h1>
+                <h1 className="text-2xl font-bold tracking-tight">
+                  Scotiabank
+                </h1>
                 <p className="text-gray-600 text-sm">
                   Asistente Virtual Inteligente
                 </p>
@@ -31,20 +38,15 @@ export default function SantanderIA() {
       <main className="flex-1 max-w-7xl mx-auto px-6 py-6 flex flex-col h-full">
         {/* Componente principal del avatar */}
         <div className="bg-white rounded-xl shadow-xl border border-red-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
-          <InteractiveAvatarGP
-            avatarId="Silas_CustomerSupport_public"
-            avatarImage="/fabian_pic.png"
-            avatarName="Fabián"
-            backgroundColor="red"
-            buttonText="🚀 Iniciar Conversación con Fabián"
-            institutionName="Santander"
-            knowledgeId="66c6c4428ccc41e6bd9d7c344742ed54"
-            language="es"
-            placeholderText="¿Qué quieres saber sobre Santander?..."
-            primaryColor="red"
-            secondaryColor="rose"
-            voiceId="05e192129b6b466493886273f8c23f78"
-            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual del Banco Santander. Es un gusto conocerte. Estoy aquí para ayudarte con tus preguntas financieras."
+          <InteractiveAvatarLiveAvatarQuickstart
+            avatarId={SCOTIABANK_PERSONA.avatarId}
+            voiceId={SCOTIABANK_PERSONA.voiceId}
+            language={SCOTIABANK_PERSONA.language}
+            contextId={SCOTIABANK_PERSONA.contextId}
+            welcomeMessage={SCOTIABANK_PERSONA.welcomeMessage}
+            institutionName="Scotiabank"
+            primaryColorHex="#e11d48"
+            primaryColorHexActive="#be123c"
           />
         </div>
       </main>

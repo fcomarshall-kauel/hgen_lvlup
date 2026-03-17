@@ -1,6 +1,8 @@
 "use client";
 
-import InteractiveAvatarGP from "@/components/InteractiveAvatar_GP";
+import Image from "next/image";
+import InteractiveAvatarLiveAvatarQuickstart from "@/components/InteractiveAvatar_LiveAvatarQuickstart";
+import { BANCORIPLEY_PERSONA } from "@/app/lib/personas";
 
 export default function BancoRipleyIA() {
   return (
@@ -10,10 +12,13 @@ export default function BancoRipleyIA() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-4">
-              <img
+              <Image
                 alt="Logo Banco Ripley"
                 className="h-12 w-auto object-contain"
                 src="/Logo_Ripley_banco.png"
+                width={190}
+                height={48}
+                priority
               />
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">
@@ -33,20 +38,15 @@ export default function BancoRipleyIA() {
       <main className="flex-1 max-w-7xl mx-auto px-6 py-6 flex flex-col h-full">
         {/* Componente principal del avatar */}
         <div className="bg-white rounded-xl shadow-xl border border-purple-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
-          <InteractiveAvatarGP
-            avatarId="Silas_CustomerSupport_public"
-            avatarImage="/fabian_pic.png"
-            avatarName="Fabián"
-            backgroundColor="purple"
-            buttonText="🚀 Iniciar Conversación con Fabián"
+          <InteractiveAvatarLiveAvatarQuickstart
+            avatarId={BANCORIPLEY_PERSONA.avatarId}
+            voiceId={BANCORIPLEY_PERSONA.voiceId}
+            language={BANCORIPLEY_PERSONA.language}
+            contextId={BANCORIPLEY_PERSONA.contextId}
+            welcomeMessage={BANCORIPLEY_PERSONA.welcomeMessage}
             institutionName="Banco Ripley"
-            knowledgeId="5f63a1812a864e4b9c3a42c650c336e1"
-            language="es"
-            placeholderText="¿Qué quieres saber sobre Banco Ripley?..."
-            primaryColor="purple"
-            secondaryColor="violet"
-            voiceId="05e192129b6b466493886273f8c23f78"
-            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual de Banco Ripley. Es un gusto conocerte. Estoy aquí para ayudarte con tus preguntas financieras."
+            primaryColorHex="#7c3aed"
+            primaryColorHexActive="#6d28d9"
           />
         </div>
       </main>

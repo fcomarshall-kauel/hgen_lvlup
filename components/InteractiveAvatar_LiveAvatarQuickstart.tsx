@@ -25,6 +25,9 @@ interface LiveAvatarQuickstartProps {
   language?: string;
   contextId?: string;
   welcomeMessage?: string;
+  institutionName?: string;
+  primaryColorHex?: string;
+  primaryColorHexActive?: string;
 }
 
 export default function InteractiveAvatarLiveAvatarQuickstart({
@@ -33,6 +36,9 @@ export default function InteractiveAvatarLiveAvatarQuickstart({
   language = "es",
   contextId,
   welcomeMessage,
+  institutionName = "Novandina",
+  primaryColorHex = "#4126b4",
+  primaryColorHexActive = "#6b52d4",
 }: LiveAvatarQuickstartProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sessionRef = useRef<LiveAvatarSession | null>(null);
@@ -103,7 +109,7 @@ export default function InteractiveAvatarLiveAvatarQuickstart({
         },
         body: JSON.stringify({
           message,
-          institutionName: "Novandina",
+          institutionName,
           language,
         }),
       });
@@ -114,7 +120,7 @@ export default function InteractiveAvatarLiveAvatarQuickstart({
       }
       return data.reply;
     },
-    [language],
+    [institutionName, language],
   );
 
   const startSession = useCallback(async () => {
@@ -292,7 +298,7 @@ export default function InteractiveAvatarLiveAvatarQuickstart({
           onClick={() => void startSession()}
           disabled={isLoading || isConnected}
           className="text-white px-5 py-2 rounded-md text-sm font-medium disabled:opacity-60 transition-colors"
-          style={{ backgroundColor: isConnected ? "#6b52d4" : "#4126b4" }}
+          style={{ backgroundColor: isConnected ? primaryColorHexActive : primaryColorHex }}
         >
           {isLoading
             ? "Conectando..."
@@ -307,7 +313,9 @@ export default function InteractiveAvatarLiveAvatarQuickstart({
         >
           Terminar
         </button>
-        <span className="text-xs ml-auto" style={{ color: "#4126b4" }}>{sessionState}</span>
+        <span className="text-xs ml-auto" style={{ color: primaryColorHex }}>
+          {sessionState}
+        </span>
       </div>
 
       <div className="p-3 bg-white flex gap-2" style={{ borderBottom: "1px solid #d4cce8" }}>
@@ -320,8 +328,13 @@ export default function InteractiveAvatarLiveAvatarQuickstart({
             }
           }}
           placeholder="Escribe tu mensaje..."
-          className="flex-1 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4126b4] focus:border-transparent"
-          style={{ border: "1px solid #d4cce8" }}
+          className="flex-1 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent"
+          style={{
+            border: "1px solid #d4cce8",
+            // React style can't set Tailwind's focus ring color dynamically,
+            // but we can set an outline color which is close enough visually.
+            outlineColor: primaryColorHex,
+          }}
           disabled={!isConnected}
         />
         <button
@@ -329,13 +342,16 @@ export default function InteractiveAvatarLiveAvatarQuickstart({
           onClick={sendText}
           disabled={!isConnected || !text.trim()}
           className="text-white px-5 py-2 rounded-md text-sm font-medium disabled:opacity-50 transition-colors"
-          style={{ backgroundColor: "#4126b4" }}
+          style={{ backgroundColor: primaryColorHex }}
         >
           Enviar
         </button>
       </div>
 
-      <div className="flex-1 min-w-0 p-3 text-sm overflow-y-auto" style={{ backgroundColor: "#f8f6fc", color: "#4126b4" }}>
+      <div
+        className="flex-1 min-w-0 p-3 text-sm overflow-y-auto"
+        style={{ backgroundColor: "#f8f6fc", color: primaryColorHex }}
+      >
         {lastUserTranscript ? (
           <p className="break-words whitespace-pre-wrap">Transcripcion usuario: {lastUserTranscript}</p>
         ) : (

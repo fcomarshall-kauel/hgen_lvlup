@@ -2,13 +2,7 @@
 
 import Image from "next/image";
 import InteractiveAvatarLiveAvatarQuickstart from "@/components/InteractiveAvatar_LiveAvatarQuickstart";
-
-const NOVANDINA_PERSONA = {
-  avatarId: "dc2935cf-5863-4f08-943b-c7478aea59fb",
-  voiceId: "73163832-b7aa-4fdc-852a-e9145e3987d4",
-  language: "es",
-  contextId: "590554fd-5e83-4e16-bc47-e01501b47e90",
-} as const;
+import { NOVANDINA_PERSONA } from "@/app/lib/personas";
 
 export default function NovandinaIA() {
   return (
@@ -38,7 +32,8 @@ export default function NovandinaIA() {
             contextId={NOVANDINA_PERSONA.contextId}
             language={NOVANDINA_PERSONA.language}
             voiceId={NOVANDINA_PERSONA.voiceId}
-            welcomeMessage="Hola, soy Andrés, y te quiero dar la bienvenida a NovaAndino Litio. Puedo contarte sobre nuestra empresa, nuestra operación en el Salar de Atacama y el proyecto Salar Futuro. ¿Por dónde te gustaría comenzar?"
+            welcomeMessage={NOVANDINA_PERSONA.welcomeMessage}
+            institutionName="Novandina"
           />
         </div>
       </main>

@@ -1,5 +1,5 @@
 export function HeyGenLogo() {
-  return <img src="/lvlup_logo.png" className="h-8" alt="lvlUp Logo" />;
+  return <img alt="lvlUp Logo" className="h-8" src="/lvlup_logo.png" />;
 }
 
 type IconSvgProps = {

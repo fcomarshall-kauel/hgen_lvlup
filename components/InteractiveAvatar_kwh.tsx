@@ -1,8 +1,12 @@
-//InteractiveAvatar_kwh.tsx 
-import type { SpeakRequest, StartAvatarResponse } from "@heygen/streaming-avatar";
+//InteractiveAvatar_kwh.tsx
+import type { StartAvatarResponse } from "@heygen/streaming-avatar";
+
 import StreamingAvatar, {
   AvatarQuality,
-  StreamingEvents, TaskMode, TaskType, VoiceEmotion,
+  StreamingEvents,
+  TaskMode,
+  TaskType,
+  VoiceEmotion,
 } from "@heygen/streaming-avatar";
 import {
   Button,
@@ -10,20 +14,16 @@ import {
   CardBody,
   CardFooter,
   Divider,
-  Input,
   Select,
   SelectItem,
   Spinner,
-  Chip,
-  Tabs,
-  Tab,
 } from "@nextui-org/react";
 import { useEffect, useRef, useState } from "react";
 import { useMemoizedFn, usePrevious } from "ahooks";
 
-import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
+import { AVATAR_VOICE_COMBINATIONS } from "@/app/lib/constants";
 
-import { AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES, AVATAR_VOICE_COMBINATIONS } from "@/app/lib/constants";
+import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 
 // Define the response type
 interface ChatResponse {
@@ -31,7 +31,7 @@ interface ChatResponse {
   context: {
     metadata: {
       filename: string;
-    }
+    };
   }[];
   additional_information: string;
   input: string;
@@ -48,10 +48,16 @@ export default function InteractiveAvatar() {
   const [stream, setStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
   const [knowledgeId, setKnowledgeId] = useState<string>("");
-  const [avatarId, setAvatarId] = useState<string>(AVATAR_VOICE_COMBINATIONS[0].avatar_id);
-  const [language, setLanguage] = useState<string>('es');
-  const [voiceId, setVoiceId] = useState<string>(AVATAR_VOICE_COMBINATIONS[0].voice_id);
-  const [audioPreview, setAudioPreview] = useState<HTMLAudioElement | null>(null);
+  const [avatarId, setAvatarId] = useState<string>(
+    AVATAR_VOICE_COMBINATIONS[0].avatar_id,
+  );
+  const [language, setLanguage] = useState<string>("es");
+  const [voiceId, setVoiceId] = useState<string>(
+    AVATAR_VOICE_COMBINATIONS[0].voice_id,
+  );
+  const [audioPreview, setAudioPreview] = useState<HTMLAudioElement | null>(
+    null,
+  );
 
   const [data, setData] = useState<StartAvatarResponse>();
   const [text, setText] = useState<string>("");
@@ -61,7 +67,9 @@ export default function InteractiveAvatar() {
   const [isUserTalking, setIsUserTalking] = useState(false);
   const [isPushToTalkActive, setIsPushToTalkActive] = useState(false);
   const [sourceDocs, setSourceDocs] = useState<string[]>([]);
-  const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'processing'>('idle');
+  const [recordingState, setRecordingState] = useState<
+    "idle" | "recording" | "processing"
+  >("idle");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const [hasMicPermission, setHasMicPermission] = useState<boolean>(false);
@@ -119,7 +127,7 @@ export default function InteractiveAvatar() {
           rate: 1,
           emotion: VoiceEmotion.FRIENDLY,
         },
-        language: 'es',
+        language: "es",
       });
 
       setData(res);
@@ -129,7 +137,7 @@ export default function InteractiveAvatar() {
       await avatar.current.speak({
         text: "Hola Doctor Sergio Cedano, Soy tu asistente virtual.Es un placer darte la bienvenida.Estaré encantada de proporcionarte la información que necesites en tu área de especialidad. No dudes en contactarme por temas de interés científico, guías actualizadas y formación médica contínua si lo requieres.",
         taskType: TaskType.REPEAT,
-        taskMode: TaskMode.SYNC
+        taskMode: TaskMode.SYNC,
       });
     } catch (error) {
       console.error("Error starting avatar session:", error);
@@ -140,17 +148,20 @@ export default function InteractiveAvatar() {
   async function handleSpeak(inputText?: string) {
     if (!avatar.current) {
       setDebug("Avatar API not initialized");
+
       return;
     }
 
     const textToSend = inputText?.trim() || text.trim();
+
     if (!textToSend) {
       setDebug("Empty input text");
+
       return;
     }
 
     try {
-      setRecordingState('processing');
+      setRecordingState("processing");
       const startTime = performance.now();
 
       const aiResponse = await fetch("/api/ai-chat", {
@@ -158,7 +169,7 @@ export default function InteractiveAvatar() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: `responde en 30 palabras o menos: ${textToSend}`,
-          knowledge_id: knowledgeId
+          knowledge_id: knowledgeId,
         }),
       });
 
@@ -166,27 +177,30 @@ export default function InteractiveAvatar() {
       const aiTime = performance.now() - startTime;
 
       console.log(`AI Response (${aiTime.toFixed(0)}ms):`, aiResponseData);
-      console.log('Full API Response:', aiResponseData);
+      console.log("Full API Response:", aiResponseData);
 
       if (!aiResponseData) {
-        throw new Error('No AI response found');
+        throw new Error("No AI response found");
       }
 
       // Speak the response
       const avatarStartTime = performance.now();
+
       await avatar.current.speak({
         text: aiResponseData,
         taskType: TaskType.REPEAT,
-        taskMode: TaskMode.SYNC
+        taskMode: TaskMode.SYNC,
       });
       const avatarTime = performance.now() - avatarStartTime;
-      console.log(`Avatar speaking time: ${avatarTime.toFixed(0)}ms`);
 
+      console.log(`Avatar speaking time: ${avatarTime.toFixed(0)}ms`);
     } catch (error) {
       console.error("Error:", error);
-      setDebug(error instanceof Error ? error.message : 'An unknown error occurred');
+      setDebug(
+        error instanceof Error ? error.message : "An unknown error occurred",
+      );
     } finally {
-      setRecordingState('idle');
+      setRecordingState("idle");
     }
   }
   async function handleInterrupt() {
@@ -195,11 +209,9 @@ export default function InteractiveAvatar() {
 
       return;
     }
-    await avatar.current
-      .interrupt()
-      .catch((e) => {
-        setDebug(e.message);
-      });
+    await avatar.current.interrupt().catch((e) => {
+      setDebug(e.message);
+    });
   }
   async function endSession() {
     if (avatar.current) {
@@ -216,6 +228,7 @@ export default function InteractiveAvatar() {
   });
 
   const previousText = usePrevious(text);
+
   useEffect(() => {
     if (!previousText && text) {
       avatar.current?.startListening();
@@ -226,7 +239,7 @@ export default function InteractiveAvatar() {
 
   useEffect(() => {
     requestMicrophonePermission(); // <-- esto es clave
-    
+
     return () => {
       endSession();
     };
@@ -245,7 +258,8 @@ export default function InteractiveAvatar() {
   async function requestMicrophonePermission() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop()); // liberamos el stream
+
+      stream.getTracks().forEach((track) => track.stop()); // liberamos el stream
       console.log("[DEBUG] Permiso de micrófono concedido");
       setHasMicPermission(true);
     } catch (error) {
@@ -254,16 +268,17 @@ export default function InteractiveAvatar() {
     }
   }
 
-
   const getSupportedMimeType = () => {
-    const types = ['audio/webm', 'audio/mp4', 'audio/ogg'];
+    const types = ["audio/webm", "audio/mp4", "audio/ogg"];
+
     for (let type of types) {
       if (MediaRecorder.isTypeSupported(type)) {
-        console.log('Supported MIME type:', type);
+        console.log("Supported MIME type:", type);
+
         return type;
       }
     }
-    throw new Error('No supported audio MIME types found');
+    throw new Error("No supported audio MIME types found");
   };
 
   const startRecording = async () => {
@@ -275,7 +290,7 @@ export default function InteractiveAvatar() {
         setIsAvatarTalking(false);
       }
 
-      setRecordingState('recording');
+      setRecordingState("recording");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mimeType = getSupportedMimeType();
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
@@ -291,58 +306,76 @@ export default function InteractiveAvatar() {
 
       mediaRecorder.start();
     } catch (error) {
-      setRecordingState('idle');
-      setDebug('Recording failed: ' + (error instanceof Error ? error.message : String(error)));
+      setRecordingState("idle");
+      setDebug(
+        "Recording failed: " +
+          (error instanceof Error ? error.message : String(error)),
+      );
     }
   };
 
-
   const stopRecording = () => {
     const mediaRecorder = mediaRecorderRef.current;
-    if (!mediaRecorder || recordingState !== 'recording') return;
 
-    setRecordingState('processing');
+    if (!mediaRecorder || recordingState !== "recording") return;
+
+    setRecordingState("processing");
     mediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
+      const audioBlob = new Blob(audioChunksRef.current, {
+        type: mediaRecorder.mimeType,
+      });
+
       await handleWhisperTranscription(audioBlob);
-      setRecordingState('idle');
+      setRecordingState("idle");
     };
 
     mediaRecorder.stop();
-    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    mediaRecorder.stream.getTracks().forEach((track) => track.stop());
   };
 
   const handleWhisperTranscription = async (audioBlob: Blob) => {
     const formData = new FormData();
-    formData.append('audio', audioBlob, 'recording.webm');
+
+    formData.append("audio", audioBlob, "recording.webm");
 
     try {
-      setRecordingState('processing');
+      setRecordingState("processing");
       const startTime = performance.now();
-      console.log('Sending audio for transcription, size:', audioBlob.size, 'type:', audioBlob.type);
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
+
+      console.log(
+        "Sending audio for transcription, size:",
+        audioBlob.size,
+        "type:",
+        audioBlob.type,
+      );
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
         body: formData,
       });
 
       const { text: transcription } = await response.json();
       const whisperTime = performance.now() - startTime;
-      console.log(`Whisper transcription (${whisperTime.toFixed(0)}ms):`, transcription);
+
+      console.log(
+        `Whisper transcription (${whisperTime.toFixed(0)}ms):`,
+        transcription,
+      );
 
       setText(transcription);
       if (transcription) {
         await handleSpeak(transcription);
       }
     } catch (error) {
-      console.error('Transcription error:', error);
-      setDebug('Transcription failed');
+      console.error("Transcription error:", error);
+      setDebug("Transcription failed");
     } finally {
-      setRecordingState('idle');
+      setRecordingState("idle");
     }
   };
 
   const handleCombinationChange = (value: string) => {
-    const combination = AVATAR_VOICE_COMBINATIONS.find(c => c.id === value);
+    const combination = AVATAR_VOICE_COMBINATIONS.find((c) => c.id === value);
+
     if (combination) {
       setAvatarId(combination.avatar_id);
       setVoiceId(combination.voice_id);
@@ -364,10 +397,10 @@ export default function InteractiveAvatar() {
               <div className="flex flex-col gap-2 absolute bottom-3 right-3">
                 <Button
                   className="bg-gradient-to-tr from-indigo-500 to-indigo-300 text-white rounded-lg"
+                  isDisabled={!isAvatarTalking} // ⬅️ Desactiva cuando no habla el avatar
                   size="md"
                   variant="shadow"
                   onClick={handleInterrupt}
-                  isDisabled={!isAvatarTalking} // ⬅️ Desactiva cuando no habla el avatar
                 >
                   Interrumpir
                 </Button>
@@ -385,16 +418,21 @@ export default function InteractiveAvatar() {
             <div className="h-full justify-center items-center flex flex-col gap-8 w-[500px] self-center">
               <div className="flex flex-col gap-3 w-full">
                 <Select
+                  disallowEmptySelection={false}
                   label="Selección de Agente y Voz"
                   placeholder="Seleccione un agente"
+                  selectedKeys={
+                    new Set([
+                      AVATAR_VOICE_COMBINATIONS.find(
+                        (c) =>
+                          c.avatar_id === avatarId && c.voice_id === voiceId,
+                      )?.id || AVATAR_VOICE_COMBINATIONS[0].id,
+                    ])
+                  }
                   variant="bordered"
-                  disallowEmptySelection={false}
-                  selectedKeys={new Set([
-                    AVATAR_VOICE_COMBINATIONS.find(c =>
-                      c.avatar_id === avatarId && c.voice_id === voiceId
-                    )?.id || AVATAR_VOICE_COMBINATIONS[0].id
-                  ])}
-                  onSelectionChange={(keys) => handleCombinationChange(Array.from(keys)[0] as string)}
+                  onSelectionChange={(keys) =>
+                    handleCombinationChange(Array.from(keys)[0] as string)
+                  }
                 >
                   {AVATAR_VOICE_COMBINATIONS.map((combo) => (
                     <SelectItem key={combo.id} value={combo.id}>
@@ -425,30 +463,31 @@ export default function InteractiveAvatar() {
                   disabled={!stream}
                   input={text}
                   label="Chat"
-                  loading={recordingState === 'processing'}
+                  loading={recordingState === "processing"}
                   placeholder="Escriba algo para que el avatar responda"
                   setInput={setText}
                   onSubmit={handleSpeak}
                 />
                 <Button
-                  className={`ml-2 ${recordingState === 'recording'
-                      ? 'bg-red-500'
-                      : recordingState === 'processing'
-                        ? 'bg-yellow-500'
-                        : 'bg-blue-500'
-                    } text-white rounded-lg`}
+                  className={`ml-2 ${
+                    recordingState === "recording"
+                      ? "bg-red-500"
+                      : recordingState === "processing"
+                        ? "bg-yellow-500"
+                        : "bg-blue-500"
+                  } text-white rounded-lg`}
+                  isDisabled={recordingState === "processing"}
                   size="md"
                   variant="shadow"
-                  isDisabled={recordingState === 'processing'}
                   onPointerDown={startRecording}
-                  onPointerUp={stopRecording}
                   onPointerLeave={stopRecording}
+                  onPointerUp={stopRecording}
                 >
-                  {recordingState === 'recording'
-                    ? 'Escuchando...'
-                    : recordingState === 'processing'
-                      ? 'Procesando...'
-                      : 'Mantener para hablar'}
+                  {recordingState === "recording"
+                    ? "Escuchando..."
+                    : recordingState === "processing"
+                      ? "Procesando..."
+                      : "Mantener para hablar"}
                 </Button>
               </div>
 

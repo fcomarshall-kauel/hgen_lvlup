@@ -1,7 +1,6 @@
 "use client";
 
 import InteractiveAvatarGP from "@/components/InteractiveAvatar_GP";
-import Image from "next/image";
 
 export default function SantanderIA() {
   return (
@@ -12,20 +11,20 @@ export default function SantanderIA() {
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-4">
               <img
-                src="/Logo_Santander.png"
                 alt="Logo Satander"
                 className="h-12 w-auto object-contain"
+                src="/Logo_Santander.png"
               />
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">
-                  Santander
-                </h1>
-                <p className="text-gray-600 text-sm">Asistente Virtual Inteligente</p>
+                <h1 className="text-2xl font-bold tracking-tight">Santander</h1>
+                <p className="text-gray-600 text-sm">
+                  Asistente Virtual Inteligente
+                </p>
               </div>
             </div>
           </div>
         </div>
-        <div className="h-1 bg-gradient-to-r from-red-400 via-red-300 to-red-400"></div>
+        <div className="h-1 bg-gradient-to-r from-red-400 via-red-300 to-red-400" />
       </header>
 
       {/* Contenido principal */}
@@ -33,19 +32,19 @@ export default function SantanderIA() {
         {/* Componente principal del avatar */}
         <div className="bg-white rounded-xl shadow-xl border border-red-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
           <InteractiveAvatarGP
-            knowledgeId="66c6c4428ccc41e6bd9d7c344742ed54"
             avatarId="Silas_CustomerSupport_public"
-            voiceId="05e192129b6b466493886273f8c23f78"
-            language="es"
-            avatarName="Fabián"
-            institutionName="Santander"
             avatarImage="/fabian_pic.png"
-            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual del Banco Santander. Es un gusto conocerte. Estoy aquí para ayudarte con tus preguntas financieras."
+            avatarName="Fabián"
+            backgroundColor="red"
+            buttonText="🚀 Iniciar Conversación con Fabián"
+            institutionName="Santander"
+            knowledgeId="66c6c4428ccc41e6bd9d7c344742ed54"
+            language="es"
+            placeholderText="¿Qué quieres saber sobre Santander?..."
             primaryColor="red"
             secondaryColor="rose"
-            backgroundColor="red"
-            placeholderText="¿Qué quieres saber sobre Santander?..."
-            buttonText="🚀 Iniciar Conversación con Fabián"
+            voiceId="05e192129b6b466493886273f8c23f78"
+            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual del Banco Santander. Es un gusto conocerte. Estoy aquí para ayudarte con tus preguntas financieras."
           />
         </div>
       </main>

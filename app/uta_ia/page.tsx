@@ -1,7 +1,8 @@
 "use client";
 
-import InteractiveAvatarUta from "@/components/InteractiveAvatar_uta";
 import Image from "next/image";
+
+import InteractiveAvatarUta from "@/components/InteractiveAvatar_uta";
 
 export default function UtaAI() {
   return (
@@ -13,11 +14,11 @@ export default function UtaAI() {
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1">
                 <Image
-                  src="/logo_web_uta.png"
                   alt="Logo Universidad de Tarapacá"
-                  width={40}
-                  height={40}
                   className="object-contain ml-0.5 mt-0.5"
+                  height={40}
+                  src="/logo_web_uta.png"
+                  width={40}
                 />
               </div>
               <div>
@@ -29,7 +30,7 @@ export default function UtaAI() {
             </div>
           </div>
         </div>
-        <div className="h-1 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400"></div>
+        <div className="h-1 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400" />
       </header>
 
       {/* Contenido principal */}
@@ -41,4 +42,4 @@ export default function UtaAI() {
       </main>
     </div>
   );
-} 
+}

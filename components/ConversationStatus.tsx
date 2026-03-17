@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ConversationStatusProps {
   isVoiceChatActive: boolean;
@@ -7,9 +7,9 @@ interface ConversationStatusProps {
   isProcessing: boolean; // Nuevo: estado de procesamiento
   lastTranscript: string;
   currentAvatarMessage?: string; // Nuevo: mensaje actual del avatar
-  chatMode: 'text_mode' | 'voice_mode';
+  chatMode: "text_mode" | "voice_mode";
   className?: string;
-  mode?: 'overlay' | 'panel' | 'both'; // Nuevo: modo de renderizado
+  mode?: "overlay" | "panel" | "both"; // Nuevo: modo de renderizado
 }
 
 export default function ConversationStatus({
@@ -21,25 +21,33 @@ export default function ConversationStatus({
   currentAvatarMessage = "",
   chatMode,
   className = "",
-  mode = 'both'
+  mode = "both",
 }: ConversationStatusProps) {
   // Voice chat status overlay (for video mode)
   const VoiceStatusOverlay = () => {
-    if (!isVoiceChatActive || chatMode !== 'voice_mode') return null;
+    if (!isVoiceChatActive || chatMode !== "voice_mode") return null;
 
     return (
       <div className="absolute top-2 left-2 flex items-center gap-2 bg-black bg-opacity-50 rounded-full px-3 py-2 z-10">
-        <div className={`w-3 h-3 rounded-full ${
-          isUserTalking ? 'bg-red-500 animate-pulse' : 
-          isProcessing ? 'bg-yellow-500 animate-spin' :
-          isAvatarTalking ? 'bg-blue-500 animate-pulse' :
-          'bg-green-500'
-        }`}></div>
+        <div
+          className={`w-3 h-3 rounded-full ${
+            isUserTalking
+              ? "bg-red-500 animate-pulse"
+              : isProcessing
+                ? "bg-yellow-500 animate-spin"
+                : isAvatarTalking
+                  ? "bg-blue-500 animate-pulse"
+                  : "bg-green-500"
+          }`}
+        />
         <span className="text-white text-sm">
-          {isUserTalking ? '🎤 Escuchando...' : 
-           isProcessing ? '🤔 Procesando...' :
-           isAvatarTalking ? '🗣️ Asistente hablando...' :
-           '✅ Conversación activa'}
+          {isUserTalking
+            ? "🎤 Escuchando..."
+            : isProcessing
+              ? "🤔 Procesando..."
+              : isAvatarTalking
+                ? "🗣️ Asistente hablando..."
+                : "✅ Conversación activa"}
         </span>
       </div>
     );
@@ -47,7 +55,7 @@ export default function ConversationStatus({
 
   // User transcript overlay (for video mode)
   const TranscriptOverlay = () => {
-    if (chatMode !== 'voice_mode') return null;
+    if (chatMode !== "voice_mode") return null;
 
     // Show live talking indicator when user is speaking
     if (isUserTalking) {
@@ -82,7 +90,7 @@ export default function ConversationStatus({
 
   // Main conversation status panel (for footer mode) - Modern horizontal layout
   const ConversationPanel = () => {
-    if (chatMode !== 'voice_mode') return null;
+    if (chatMode !== "voice_mode") return null;
 
     return (
       <div className="bg-white rounded-lg shadow border border-gray-200 w-full">
@@ -90,60 +98,69 @@ export default function ConversationStatus({
         <div className="flex items-center justify-between p-3 border-b border-gray-100">
           <div className="flex items-center gap-3">
             {/* Status Indicator */}
-            <div 
+            <div
               className={`w-10 h-10 rounded-full text-white font-bold text-sm transition-all duration-200 shadow-md flex items-center justify-center ${
                 isUserTalking
                   ? "bg-red-500 animate-pulse"
                   : isProcessing
-                  ? "bg-yellow-500 animate-spin"
-                  : isAvatarTalking
-                  ? "bg-blue-500 animate-pulse"
-                  : isVoiceChatActive
-                  ? "bg-green-500"
-                  : "bg-gray-400"
+                    ? "bg-yellow-500 animate-spin"
+                    : isAvatarTalking
+                      ? "bg-blue-500 animate-pulse"
+                      : isVoiceChatActive
+                        ? "bg-green-500"
+                        : "bg-gray-400"
               }`}
             >
-              {isUserTalking ? "🎤" : 
-               isProcessing ? "🤔" :
-               isAvatarTalking ? "🗣️" :
-               isVoiceChatActive ? "✅" : "⏳"}
+              {isUserTalking
+                ? "🎤"
+                : isProcessing
+                  ? "🤔"
+                  : isAvatarTalking
+                    ? "🗣️"
+                    : isVoiceChatActive
+                      ? "✅"
+                      : "⏳"}
             </div>
-            
+
             {/* Status Text */}
             <div>
-              <span className={`text-sm font-medium ${
-                isUserTalking 
-                  ? "text-red-600" 
+              <span
+                className={`text-sm font-medium ${
+                  isUserTalking
+                    ? "text-red-600"
+                    : isProcessing
+                      ? "text-yellow-600"
+                      : isAvatarTalking
+                        ? "text-blue-600"
+                        : isVoiceChatActive
+                          ? "text-green-600"
+                          : "text-gray-600"
+                }`}
+              >
+                {isUserTalking
+                  ? "Escuchando tu pregunta..."
                   : isProcessing
-                  ? "text-yellow-600"
-                  : isAvatarTalking
-                  ? "text-blue-600"
-                  : isVoiceChatActive
-                  ? "text-green-600"
-                  : "text-gray-600"
-              }`}>
-                {isUserTalking 
-                  ? "Escuchando tu pregunta..." 
-                  : isProcessing
-                  ? "Pensando en tu respuesta..."
-                  : isAvatarTalking
-                  ? "Tara está respondiendo..."
-                  : isVoiceChatActive
-                  ? "Conversación activa - Habla libremente"
-                  : "Activando conversación de voz..."}
+                    ? "Pensando en tu respuesta..."
+                    : isAvatarTalking
+                      ? "Tara está respondiendo..."
+                      : isVoiceChatActive
+                        ? "Conversación activa - Habla libremente"
+                        : "Activando conversación de voz..."}
               </span>
             </div>
           </div>
-          
+
           {/* Connection indicator */}
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isVoiceChatActive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            <div
+              className={`w-2 h-2 rounded-full ${isVoiceChatActive ? "bg-green-500" : "bg-gray-300"}`}
+            />
             <span className="text-xs text-gray-500">
-              {isVoiceChatActive ? 'Conectado' : 'Desconectado'}
+              {isVoiceChatActive ? "Conectado" : "Desconectado"}
             </span>
           </div>
         </div>
-        
+
         {/* Avatar Current Message - When talking */}
         {isAvatarTalking && currentAvatarMessage && (
           <div className="px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-100">
@@ -160,23 +177,19 @@ export default function ConversationStatus({
             </div>
           </div>
         )}
-
-
       </div>
     );
   };
 
   return (
     <div className={className}>
-      {(mode === 'overlay' || mode === 'both') && (
+      {(mode === "overlay" || mode === "both") && (
         <>
           <VoiceStatusOverlay />
           <TranscriptOverlay />
         </>
       )}
-      {(mode === 'panel' || mode === 'both') && (
-        <ConversationPanel />
-      )}
+      {(mode === "panel" || mode === "both") && <ConversationPanel />}
     </div>
   );
-} 
+}

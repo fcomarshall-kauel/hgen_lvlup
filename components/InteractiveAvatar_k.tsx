@@ -1,7 +1,14 @@
-import type { SpeakRequest, StartAvatarResponse } from "@heygen/streaming-avatar";
+import type {
+  SpeakRequest,
+  StartAvatarResponse,
+} from "@heygen/streaming-avatar";
+
 import StreamingAvatar, {
   AvatarQuality,
-  StreamingEvents, TaskMode, TaskType, VoiceEmotion,
+  StreamingEvents,
+  TaskMode,
+  TaskType,
+  VoiceEmotion,
 } from "@heygen/streaming-avatar";
 import {
   Button,
@@ -9,20 +16,16 @@ import {
   CardBody,
   CardFooter,
   Divider,
-  Input,
   Select,
   SelectItem,
   Spinner,
-  Chip,
-  Tabs,
-  Tab,
 } from "@nextui-org/react";
 import { useEffect, useRef, useState } from "react";
 import { useMemoizedFn, usePrevious } from "ahooks";
 
-import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
+import { AVATARS, VOICES } from "@/app/lib/constants";
 
-import {AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES} from "@/app/lib/constants";
+import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 
 // Define the response type
 interface ChatResponse {
@@ -30,7 +33,7 @@ interface ChatResponse {
   context: {
     metadata: {
       filename: string;
-    }
+    };
   }[];
   additional_information: string;
   input: string;
@@ -49,9 +52,11 @@ export default function InteractiveAvatar() {
   const [debug, setDebug] = useState<string>();
   const [knowledgeId, setKnowledgeId] = useState<string>("");
   const [avatarId, setAvatarId] = useState<string>("");
-  const [language, setLanguage] = useState<string>('es');
+  const [language, setLanguage] = useState<string>("es");
   const [voiceId, setVoiceId] = useState("");
-  const [audioPreview, setAudioPreview] = useState<HTMLAudioElement | null>(null);
+  const [audioPreview, setAudioPreview] = useState<HTMLAudioElement | null>(
+    null,
+  );
 
   const [data, setData] = useState<StartAvatarResponse>();
   const [text, setText] = useState<string>("");
@@ -104,7 +109,7 @@ export default function InteractiveAvatar() {
       const res = await avatar.current.createStartAvatar({
         quality: AvatarQuality.Low,
         avatarName: avatarId,
-        knowledgeId: knowledgeId, 
+        knowledgeId: knowledgeId,
         voice: {
           voiceId: voiceId,
           rate: 1,
@@ -123,43 +128,50 @@ export default function InteractiveAvatar() {
   }
   async function handleSpeak() {
     const startTime = performance.now();
+
     console.log(`[${new Date().toISOString()}] Starting request...`);
-    
+
     setIsLoadingRepeat(true);
     setSourceDocs([]);
-    
+
     if (!avatar.current) {
       setDebug("Avatar API not initialized");
+
       return;
     }
 
     try {
       const apiStartTime = performance.now();
+
       console.log(`[${new Date().toISOString()}] Sending request to AI API...`);
-      
-      const aiResponse = await fetch('/api/ai-chat', {
-        method: 'POST',
+
+      const aiResponse = await fetch("/api/ai-chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ message: text }),
       });
-      
-      const aiResponseData = await aiResponse.json() as ChatResponse;
-      
-      console.log('Full API Response:', aiResponseData);
-      
+
+      const aiResponseData = (await aiResponse.json()) as ChatResponse;
+
+      console.log("Full API Response:", aiResponseData);
+
       const apiEndTime = performance.now();
-      console.log(`[${new Date().toISOString()}] AI API response received in ${(apiEndTime - apiStartTime).toFixed(2)}ms`);
-      
+
+      console.log(
+        `[${new Date().toISOString()}] AI API response received in ${(apiEndTime - apiStartTime).toFixed(2)}ms`,
+      );
+
       if (!aiResponseData.answer) {
-        throw new Error('No AI response found');
+        throw new Error("No AI response found");
       }
 
       const uniqueFiles = aiResponseData.context
-        .map(ctx => ctx.metadata.filename)
-        .filter((filename, index, self) => 
-          filename && self.indexOf(filename) === index
+        .map((ctx) => ctx.metadata.filename)
+        .filter(
+          (filename, index, self) =>
+            filename && self.indexOf(filename) === index,
         );
 
       setSourceDocs(uniqueFiles);
@@ -171,23 +183,24 @@ export default function InteractiveAvatar() {
       const speakRequest: SpeakRequest = {
         text: aiResponseData.answer,
         taskType: TaskType.REPEAT,
-        taskMode: TaskMode.SYNC
+        taskMode: TaskMode.SYNC,
       };
 
       await avatar.current.speak(speakRequest);
-      
+
       const speakEndTime = performance.now();
-      
+
       console.log(`
         Timing Breakdown:
         - Total time: ${(speakEndTime - startTime).toFixed(2)}ms
         - API request time: ${(apiEndTime - apiStartTime).toFixed(2)}ms
         - Avatar preparation and speech start time: ${(speakEndTime - speakStartTime).toFixed(2)}ms
       `);
-
     } catch (error: unknown) {
       console.error("Error:", error);
-      setDebug(error instanceof Error ? error.message : 'An unknown error occurred');
+      setDebug(
+        error instanceof Error ? error.message : "An unknown error occurred",
+      );
     } finally {
       setIsLoadingRepeat(false);
     }
@@ -198,11 +211,9 @@ export default function InteractiveAvatar() {
 
       return;
     }
-    await avatar.current
-      .interrupt()
-      .catch((e) => {
-        setDebug(e.message);
-      });
+    await avatar.current.interrupt().catch((e) => {
+      setDebug(e.message);
+    });
   }
   async function endSession() {
     if (avatar.current) {
@@ -219,6 +230,7 @@ export default function InteractiveAvatar() {
   });
 
   const previousText = usePrevious(text);
+
   useEffect(() => {
     if (!previousText && text) {
       avatar.current?.startListening();
@@ -330,7 +342,7 @@ export default function InteractiveAvatar() {
                   onSubmit={handleSpeak}
                 />
               </div>
-              
+
               {sourceDocs.length > 0 && (
                 <div className="text-sm text-gray-500">
                   <p className="font-medium">Sources:</p>

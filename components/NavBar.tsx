@@ -7,6 +7,7 @@ import {
   NavbarContent,
   NavbarItem,
 } from "@nextui-org/react";
+
 import { GithubIcon, HeyGenLogo } from "./Icons";
 import { ThemeSwitch } from "./ThemeSwitch";
 
@@ -19,7 +20,7 @@ export default function NavBar() {
         </Link>
         <div className="bg-gradient-to-br from-gray-900 to-gray-300 bg-clip-text ml-4">
           <p className="text-xl font-semibold text-transparent">
-            Level|Up - Simulación Conversacional 
+            Level|Up - Simulación Conversacional
           </p>
         </div>
       </NavbarBrand>
@@ -53,17 +54,14 @@ export default function NavBar() {
           >
             Guide
           </Link>
-          <Link
-            color="foreground"
-            href="/ui-test"
-          >
+          <Link color="foreground" href="/ui-test">
             🧪 UI Test
           </Link>
           <Link
             isExternal
             aria-label="Github"
-            href="https://github.com/HeyGen-Official/StreamingAvatarSDK"
             className="flex flex-row justify-center gap-1 text-foreground"
+            href="https://github.com/HeyGen-Official/StreamingAvatarSDK"
           >
             <GithubIcon className="text-default-500" />
             SDK

@@ -47,22 +47,22 @@ export default function InteractiveAvatarTextInput({
             {loading ? (
               <Spinner
                 className="text-indigo-300 hover:text-indigo-200"
-                size="sm"
                 color="default"
+                size="sm"
               />
             ) : (
               <Button
                 isIconOnly
-                variant="light"
-                size="sm"
-                onPress={handleSubmit}
-                isDisabled={disabled}
                 className="min-w-0 p-0 h-auto bg-transparent"
+                isDisabled={disabled}
+                size="sm"
+                variant="light"
+                onPress={handleSubmit}
               >
                 <Send
                   className={clsx(
                     "text-indigo-300 hover:text-indigo-200",
-                    disabled && "opacity-50"
+                    disabled && "opacity-50",
                   )}
                   size={24}
                 />
@@ -71,13 +71,13 @@ export default function InteractiveAvatarTextInput({
           </Tooltip>
         </div>
       }
+      isDisabled={disabled}
       label={label}
       placeholder={placeholder}
       size="sm"
       value={input}
       onKeyDown={handleKeyDown}
       onValueChange={setInput}
-      isDisabled={disabled}
     />
   );
 }

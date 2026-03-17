@@ -1,7 +1,11 @@
 import type { StartAvatarResponse } from "@heygen/streaming-avatar";
+
 import StreamingAvatar, {
   AvatarQuality,
-  StreamingEvents, TaskMode, TaskType, VoiceEmotion,
+  StreamingEvents,
+  TaskMode,
+  TaskType,
+  VoiceEmotion,
 } from "@heygen/streaming-avatar";
 import {
   Button,
@@ -9,7 +13,6 @@ import {
   CardBody,
   CardFooter,
   Divider,
-  Input,
   Select,
   SelectItem,
   Spinner,
@@ -20,9 +23,9 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useMemoizedFn, usePrevious } from "ahooks";
 
-import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
+import { AVATARS, SIMULATIONS, VOICES } from "@/app/lib/constants";
 
-import {AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES} from "@/app/lib/constants";
+import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 
 export default function InteractiveAvatar() {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
@@ -31,9 +34,11 @@ export default function InteractiveAvatar() {
   const [debug, setDebug] = useState<string>();
   const [knowledgeId, setKnowledgeId] = useState<string>("");
   const [avatarId, setAvatarId] = useState<string>("");
-  const [language, setLanguage] = useState<string>('es');
+  const [language, setLanguage] = useState<string>("es");
   const [voiceId, setVoiceId] = useState("");
-  const [audioPreview, setAudioPreview] = useState<HTMLAudioElement | null>(null);
+  const [audioPreview, setAudioPreview] = useState<HTMLAudioElement | null>(
+    null,
+  );
 
   const [data, setData] = useState<StartAvatarResponse>();
   const [text, setText] = useState<string>("");
@@ -42,7 +47,6 @@ export default function InteractiveAvatar() {
   const [chatMode, setChatMode] = useState("text_mode");
   const [isUserTalking, setIsUserTalking] = useState(false);
   const [isPushToTalkActive, setIsPushToTalkActive] = useState(false);
-
 
   async function fetchAccessToken() {
     try {
@@ -94,7 +98,7 @@ export default function InteractiveAvatar() {
       const res = await avatar.current.createStartAvatar({
         quality: AvatarQuality.Low,
         avatarName: avatarId,
-        knowledgeId: knowledgeId, 
+        knowledgeId: knowledgeId,
         voice: {
           voiceId: voiceId,
           rate: 1, // 0.5 ~ 1.5
@@ -121,9 +125,11 @@ export default function InteractiveAvatar() {
       return;
     }
     // speak({ text: text, task_type: TaskType.REPEAT })
-    await avatar.current.speak({ text: text, taskType: TaskType.REPEAT, taskMode: TaskMode.SYNC }).catch((e) => {
-      setDebug(e.message);
-    });
+    await avatar.current
+      .speak({ text: text, taskType: TaskType.REPEAT, taskMode: TaskMode.SYNC })
+      .catch((e) => {
+        setDebug(e.message);
+      });
     setIsLoadingRepeat(false);
   }
   async function handleInterrupt() {
@@ -132,11 +138,9 @@ export default function InteractiveAvatar() {
 
       return;
     }
-    await avatar.current
-      .interrupt()
-      .catch((e) => {
-        setDebug(e.message);
-      });
+    await avatar.current.interrupt().catch((e) => {
+      setDebug(e.message);
+    });
   }
   async function endSession() {
     await avatar.current?.stopAvatar();
@@ -156,6 +160,7 @@ export default function InteractiveAvatar() {
   });
 
   const previousText = usePrevious(text);
+
   useEffect(() => {
     if (!previousText && text) {
       avatar.current?.startListening();
@@ -240,7 +245,6 @@ export default function InteractiveAvatar() {
                 <Select
                   label="Seleccione Avatar"
                   size="md"
-                
                   onChange={(e) => {
                     setAvatarId(e.target.value);
                   }}
@@ -255,20 +259,22 @@ export default function InteractiveAvatar() {
                     </SelectItem>
                   ))}
                 </Select>
-                <p className="text-sm font-medium leading-none">
-                  Voz y Acento
-                </p>
+                <p className="text-sm font-medium leading-none">Voz y Acento</p>
                 <Select
                   label="Voz y Acento"
                   size="md"
                   onChange={(e) => {
                     setVoiceId(e.target.value);
-                    const selectedVoice = VOICES.find(voice => voice.voice_id === e.target.value);
+                    const selectedVoice = VOICES.find(
+                      (voice) => voice.voice_id === e.target.value,
+                    );
+
                     if (selectedVoice?.preview_url) {
                       if (audioPreview) {
                         audioPreview.pause();
                       }
                       const audio = new Audio(selectedVoice.preview_url);
+
                       setAudioPreview(audio);
                       audio.play();
                     }
@@ -284,9 +290,7 @@ export default function InteractiveAvatar() {
                     </SelectItem>
                   ))}
                 </Select>
-                <p className="text-sm font-medium leading-none">
-                 Situación 
-                </p>
+                <p className="text-sm font-medium leading-none">Situación</p>
                 <Select
                   label="Situación"
                   size="md"
@@ -304,13 +308,6 @@ export default function InteractiveAvatar() {
                     </SelectItem>
                   ))}
                 </Select>
-
-
-
-
-
-
- 
               </div>
               <Button
                 className="bg-gradient-to-tr from-indigo-500 to-indigo-300 w-full text-white"
@@ -359,8 +356,8 @@ export default function InteractiveAvatar() {
                 size="md"
                 variant="shadow"
                 onMouseDown={handlePushToTalkStart}
-                onMouseUp={handlePushToTalkEnd}
                 onMouseLeave={handlePushToTalkEnd}
+                onMouseUp={handlePushToTalkEnd}
               >
                 {isPushToTalkActive ? "Listening..." : "Hold to Talk"}
               </Button>

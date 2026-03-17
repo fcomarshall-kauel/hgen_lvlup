@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import InteractiveAvatarGP from "@/components/InteractiveAvatar_GP";
 import { Select, SelectItem } from "@nextui-org/react";
-import Image from "next/image";
+
+import InteractiveAvatarGP from "@/components/InteractiveAvatar_GP";
 
 // ============================================
 // PARÁMETROS DE CONFIGURACIÓN - EDITAR AQUÍ
@@ -12,7 +12,7 @@ const CONFIG = {
   // Títulos del Header
   titulo: "Simulador de Postventa",
   subtitulo: "Practica y mejora tus técnicas de Atención al Cliente",
-  
+
   // Configuración del Avatar
   knowledgeId: "d128aab86d6949c881f7e582e7805eee",
   avatarId: "Silas_CustomerSupport_public",
@@ -21,12 +21,13 @@ const CONFIG = {
   avatarName: "Coach Postventa",
   institutionName: "Simulador para Postventa",
   avatarImage: "/fabian_pic.png",
-  welcomeMessage: "Hola, soy tu Coach-Tutor Dinámico de Postventa. He recibido la configuración de la simulación y estoy listo para comenzar.",
-  
+  welcomeMessage:
+    "Hola, soy tu Coach-Tutor Dinámico de Postventa. He recibido la configuración de la simulación y estoy listo para comenzar.",
+
   // Textos de la interfaz
   placeholderText: "Describe el escenario que quieres practicar...",
   buttonText: "🎯 Comenzar Práctica de Postventa",
-  
+
   // Colores
   primaryColor: "purple",
   secondaryColor: "indigo",
@@ -37,7 +38,7 @@ const CONFIG = {
 export default function CommunicationSimulator() {
   const [isConfigured, setIsConfigured] = useState(false);
   const [initialPrompt, setInitialPrompt] = useState<string>("");
-  
+
   // Estados de configuración
   const [producto, setProducto] = useState<string>("cepillo");
   const [estadoCliente, setEstadoCliente] = useState<string>("frustrado");
@@ -50,7 +51,7 @@ export default function CommunicationSimulator() {
     { key: "enjuague", label: "Enjuague bucal" },
     { key: "hilo", label: "Hilo dental" },
     { key: "blanqueador", label: "Kit blanqueador" },
-    { key: "electrico", label: "Cepillo eléctrico" }
+    { key: "electrico", label: "Cepillo eléctrico" },
   ];
 
   const estadosCliente = [
@@ -59,14 +60,14 @@ export default function CommunicationSimulator() {
     { key: "tranquilo", label: "Tranquilo" },
     { key: "impaciente", label: "Impaciente" },
     { key: "decepcionado", label: "Decepcionado" },
-    { key: "enojado", label: "Enojado" }
+    { key: "enojado", label: "Enojado" },
   ];
 
   const etapas = [
     { key: "apertura", label: "Apertura" },
     { key: "indagacion", label: "Indagación" },
     { key: "solucion", label: "Propuesta de Solución" },
-    { key: "cierre", label: "Cierre" }
+    { key: "cierre", label: "Cierre" },
   ];
 
   const reclamos = [
@@ -77,7 +78,7 @@ export default function CommunicationSimulator() {
     { key: "no_funciona", label: "Producto no funciona correctamente" },
     { key: "calidad_inferior", label: "Calidad inferior a la esperada" },
     { key: "falta_piezas", label: "Faltan piezas o accesorios" },
-    { key: "cobro_incorrecto", label: "Cobro incorrecto" }
+    { key: "cobro_incorrecto", label: "Cobro incorrecto" },
   ];
 
   const buildPrompt = () => {
@@ -87,7 +88,7 @@ export default function CommunicationSimulator() {
       enjuague: "Enjuague bucal",
       hilo: "Hilo dental",
       blanqueador: "Kit blanqueador",
-      electrico: "Cepillo eléctrico"
+      electrico: "Cepillo eléctrico",
     };
 
     const estadoMap: { [key: string]: string } = {
@@ -96,14 +97,14 @@ export default function CommunicationSimulator() {
       tranquilo: "Tranquilo",
       impaciente: "Impaciente",
       decepcionado: "Decepcionado",
-      enojado: "Enojado"
+      enojado: "Enojado",
     };
 
     const etapaMap: { [key: string]: string } = {
       apertura: "Apertura",
       indagacion: "Indagación",
       solucion: "Propuesta de Solución",
-      cierre: "Cierre"
+      cierre: "Cierre",
     };
 
     const reclamoMap: { [key: string]: string } = {
@@ -114,7 +115,7 @@ export default function CommunicationSimulator() {
       no_funciona: "Producto no funciona correctamente",
       calidad_inferior: "Calidad inferior a la esperada",
       falta_piezas: "Faltan piezas o accesorios",
-      cobro_incorrecto: "Cobro incorrecto"
+      cobro_incorrecto: "Cobro incorrecto",
     };
 
     return `Configuración de la simulación de Postventa:
@@ -129,6 +130,7 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
   const handleStartSimulation = () => {
     console.log("🚀 Iniciando simulación...");
     const prompt = buildPrompt();
+
     console.log("📝 Prompt construido:", prompt);
     setInitialPrompt(prompt);
     setIsConfigured(true);
@@ -142,7 +144,12 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
     setInitialPrompt("");
   };
 
-  console.log("🔍 Estado actual - isConfigured:", isConfigured, "initialPrompt:", initialPrompt ? "presente" : "vacío");
+  console.log(
+    "🔍 Estado actual - isConfigured:",
+    isConfigured,
+    "initialPrompt:",
+    initialPrompt ? "presente" : "vacío",
+  );
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 overflow-hidden flex flex-col">
@@ -152,17 +159,17 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-3">
               <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full p-2 shadow-lg">
-                <svg 
-                  className="w-6 h-6 text-white" 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" 
+                  <path
+                    d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
                   />
                 </svg>
               </div>
@@ -175,7 +182,7 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
             </div>
           </div>
         </div>
-        <div className="h-1 bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-400"></div>
+        <div className="h-1 bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-400" />
       </header>
 
       {/* Contenido principal */}
@@ -184,6 +191,7 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
         <div className="bg-white rounded-xl shadow-xl border border-purple-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
           {(() => {
             console.log("🎨 Renderizando - isConfigured:", isConfigured);
+
             return null;
           })()}
           {!isConfigured ? (
@@ -194,23 +202,26 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
                   <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-1">
                     🎓 Habla con {CONFIG.avatarName}
                   </h2>
-                  <p className="text-purple-600 text-sm mb-2">{CONFIG.institutionName}</p>
-                  
+                  <p className="text-purple-600 text-sm mb-2">
+                    {CONFIG.institutionName}
+                  </p>
+
                   {CONFIG.avatarImage && (
                     <div className="w-16 h-16 mx-auto mb-2 relative">
                       <img
-                        src={CONFIG.avatarImage}
                         alt={`${CONFIG.avatarName} - Asistente Virtual`}
                         className="rounded-full object-cover border-3 border-purple-300 shadow-lg w-full h-full"
+                        src={CONFIG.avatarImage}
                       />
                     </div>
                   )}
-                  
+
                   <h3 className="text-lg font-bold text-purple-800 mb-1">
                     Conoce a {CONFIG.avatarName}
                   </h3>
                   <p className="text-purple-600 text-xs leading-relaxed max-w-md mx-auto mb-3">
-                    Tu asistente virtual especializado. Configura los parámetros de la simulación de Postventa.
+                    Tu asistente virtual especializado. Configura los parámetros
+                    de la simulación de Postventa.
                   </p>
                 </div>
 
@@ -221,13 +232,14 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
                       1. Producto
                     </label>
                     <Select
-                      selectedKeys={[producto]}
-                      onChange={(e) => setProducto(e.target.value)}
-                      placeholder="Selecciona el producto"
                       classNames={{
-                        trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
+                        trigger:
+                          "border-2 border-purple-200 hover:border-purple-400 bg-white",
                       }}
+                      placeholder="Selecciona el producto"
+                      selectedKeys={[producto]}
                       size="sm"
+                      onChange={(e) => setProducto(e.target.value)}
                     >
                       {productos.map((prod) => (
                         <SelectItem key={prod.key} value={prod.key}>
@@ -242,13 +254,14 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
                       2. Estado del Cliente
                     </label>
                     <Select
-                      selectedKeys={[estadoCliente]}
-                      onChange={(e) => setEstadoCliente(e.target.value)}
-                      placeholder="Selecciona el estado del cliente"
                       classNames={{
-                        trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
+                        trigger:
+                          "border-2 border-purple-200 hover:border-purple-400 bg-white",
                       }}
+                      placeholder="Selecciona el estado del cliente"
+                      selectedKeys={[estadoCliente]}
                       size="sm"
+                      onChange={(e) => setEstadoCliente(e.target.value)}
                     >
                       {estadosCliente.map((estado) => (
                         <SelectItem key={estado.key} value={estado.key}>
@@ -263,13 +276,14 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
                       3. Etapa de la Conversación
                     </label>
                     <Select
-                      selectedKeys={[etapa]}
-                      onChange={(e) => setEtapa(e.target.value)}
-                      placeholder="Selecciona la etapa"
                       classNames={{
-                        trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
+                        trigger:
+                          "border-2 border-purple-200 hover:border-purple-400 bg-white",
                       }}
+                      placeholder="Selecciona la etapa"
+                      selectedKeys={[etapa]}
                       size="sm"
+                      onChange={(e) => setEtapa(e.target.value)}
                     >
                       {etapas.map((et) => (
                         <SelectItem key={et.key} value={et.key}>
@@ -284,13 +298,14 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
                       4. Tipo de Reclamo
                     </label>
                     <Select
-                      selectedKeys={[reclamo]}
-                      onChange={(e) => setReclamo(e.target.value)}
-                      placeholder="Selecciona el tipo de reclamo"
                       classNames={{
-                        trigger: "border-2 border-purple-200 hover:border-purple-400 bg-white",
+                        trigger:
+                          "border-2 border-purple-200 hover:border-purple-400 bg-white",
                       }}
+                      placeholder="Selecciona el tipo de reclamo"
+                      selectedKeys={[reclamo]}
                       size="sm"
+                      onChange={(e) => setReclamo(e.target.value)}
                     >
                       {reclamos.map((rec) => (
                         <SelectItem key={rec.key} value={rec.key}>
@@ -301,9 +316,9 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
                   </div>
 
                   <button
+                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all text-base hover:scale-105"
                     type="button"
                     onClick={handleStartSimulation}
-                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all text-base hover:scale-105"
                   >
                     🚀 Comenzar Práctica de Postventa
                   </button>
@@ -313,20 +328,20 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
           ) : (
             // Una vez configurado, mostrar el InteractiveAvatarGP normal
             <InteractiveAvatarGP
-              knowledgeId={CONFIG.knowledgeId}
               avatarId={CONFIG.avatarId}
-              voiceId={CONFIG.voiceId}
-              language={CONFIG.language}
-              avatarName={CONFIG.avatarName}
-              institutionName={CONFIG.institutionName}
               avatarImage={CONFIG.avatarImage}
-              welcomeMessage={CONFIG.welcomeMessage}
-              primaryColor={CONFIG.primaryColor}
-              secondaryColor={CONFIG.secondaryColor}
+              avatarName={CONFIG.avatarName}
               backgroundColor={CONFIG.backgroundColor}
-              placeholderText={CONFIG.placeholderText}
               buttonText={CONFIG.buttonText}
               initialPrompt={initialPrompt}
+              institutionName={CONFIG.institutionName}
+              knowledgeId={CONFIG.knowledgeId}
+              language={CONFIG.language}
+              placeholderText={CONFIG.placeholderText}
+              primaryColor={CONFIG.primaryColor}
+              secondaryColor={CONFIG.secondaryColor}
+              voiceId={CONFIG.voiceId}
+              welcomeMessage={CONFIG.welcomeMessage}
               onSessionEnd={handleSessionEnd}
             />
           )}
@@ -341,17 +356,17 @@ Por favor, comienza la simulación actuando como un cliente con estas caracterí
               <span className="font-semibold text-purple-600">💬</span>
               <span className="text-[10px]">Escucha activa</span>
             </div>
-            <div className="w-1 h-3 bg-gray-300 rounded"></div>
+            <div className="w-1 h-3 bg-gray-300 rounded" />
             <div className="flex items-center space-x-1">
               <span className="font-semibold text-purple-600">🎤</span>
               <span className="text-[10px]">Expresión clara</span>
             </div>
-            <div className="w-1 h-3 bg-gray-300 rounded"></div>
+            <div className="w-1 h-3 bg-gray-300 rounded" />
             <div className="flex items-center space-x-1">
               <span className="font-semibold text-purple-600">🤝</span>
               <span className="text-[10px]">Empatía</span>
             </div>
-            <div className="w-1 h-3 bg-gray-300 rounded"></div>
+            <div className="w-1 h-3 bg-gray-300 rounded" />
             <div className="flex items-center space-x-1">
               <span className="font-semibold text-purple-600">✨</span>
               <span className="text-[10px]">Feedback constructivo</span>

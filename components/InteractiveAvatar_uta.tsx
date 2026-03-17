@@ -1,7 +1,11 @@
 import type { StartAvatarResponse } from "@heygen/streaming-avatar";
+
 import StreamingAvatar, {
   AvatarQuality,
-  StreamingEvents, TaskMode, TaskType, VoiceEmotion,
+  StreamingEvents,
+  TaskMode,
+  TaskType,
+  VoiceEmotion,
 } from "@heygen/streaming-avatar";
 import {
   Button,
@@ -10,9 +14,6 @@ import {
   CardFooter,
   Divider,
   Spinner,
-  Chip,
-  Tabs,
-  Tab,
 } from "@nextui-org/react";
 import { useEffect, useRef, useState } from "react";
 import { useMemoizedFn } from "ahooks";
@@ -20,55 +21,65 @@ import Image from "next/image";
 
 import InteractiveAvatarTextInput from "./InteractiveAvatarTextInput";
 import ConversationStatus from "./ConversationStatus";
-import ConversationHistory, { ConversationMessage } from "./ConversationHistory";
-
-import {AVATARS, SIMULATIONS, STT_LANGUAGE_LIST, VOICES} from "@/app/lib/constants";
+import ConversationHistory, {
+  ConversationMessage,
+} from "./ConversationHistory";
 
 export default function InteractiveAvatarUta() {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
   const [isLoadingRepeat, setIsLoadingRepeat] = useState(false);
   const [stream, setStream] = useState<MediaStream>();
   const [debug, setDebug] = useState<string>();
-  
+
   // Unique ID generator to avoid duplicate keys
   const messageIdCounter = useRef(0);
-  
+
   // Use ref for current avatar message to avoid closure issues
   const currentAvatarMessage = useRef<string>("");
   const lastMessageTime = useRef<number>(0);
   const currentUserMessage = useRef<string>("");
   const lastUserStartTime = useRef<number>(0);
-  
+
   // Pre-configured values for UTA
-  const [knowledgeId, setKnowledgeId] = useState<string>("6c3a2a0696a747d0aaac390f3f6910ec"); // Tara UTA
-  const [avatarId, setAvatarId] = useState<string>("Marianne_Chair_Sitting_public"); // Mujer Oficina
-  const [language, setLanguage] = useState<string>('es');
-  const [voiceId, setVoiceId] = useState<string>("8c40eafefd494b3f9b072d69325d5f15"); // Tara
+  const [knowledgeId, setKnowledgeId] = useState<string>(
+    "6c3a2a0696a747d0aaac390f3f6910ec",
+  ); // Tara UTA
+  const [avatarId, setAvatarId] = useState<string>(
+    "Marianne_Chair_Sitting_public",
+  ); // Mujer Oficina
+  const [language, setLanguage] = useState<string>("es");
+  const [voiceId, setVoiceId] = useState<string>(
+    "8c40eafefd494b3f9b072d69325d5f15",
+  ); // Tara
 
   const [data, setData] = useState<StartAvatarResponse>();
   const [text, setText] = useState<string>("");
   const mediaStream = useRef<HTMLVideoElement>(null);
   const avatar = useRef<StreamingAvatar | null>(null);
-  const [chatMode, setChatMode] = useState<'text_mode' | 'voice_mode'>('voice_mode');
+  const [chatMode, setChatMode] = useState<"text_mode" | "voice_mode">(
+    "voice_mode",
+  );
   const [isUserTalking, setIsUserTalking] = useState(false);
   const [lastTranscript, setLastTranscript] = useState<string>("");
   const [isVoiceChatActive, setIsVoiceChatActive] = useState(false);
   const [isAvatarTalking, setIsAvatarTalking] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([]);
+  const [conversationHistory, setConversationHistory] = useState<
+    ConversationMessage[]
+  >([]);
 
-  const addToHistory = (type: 'user' | 'avatar', content: string) => {
+  const addToHistory = (type: "user" | "avatar", content: string) => {
     messageIdCounter.current += 1;
     const uniqueId = `${Date.now()}-${messageIdCounter.current}`;
-    
+
     const newMessage: ConversationMessage = {
       id: uniqueId,
       type,
       content,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    
-    setConversationHistory(prev => [...prev, newMessage]);
+
+    setConversationHistory((prev) => [...prev, newMessage]);
   };
 
   async function fetchAccessToken() {
@@ -77,10 +88,12 @@ export default function InteractiveAvatarUta() {
         method: "POST",
       });
       const token = await response.text();
+
       return token;
     } catch (error) {
       console.error("Error fetching access token:", error);
     }
+
     return "";
   }
 
@@ -92,20 +105,26 @@ export default function InteractiveAvatarUta() {
 
       // Check for microphone permissions
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop());
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+        stream.getTracks().forEach((track) => track.stop());
       } catch (permError) {
         console.error("❌ Microphone permission denied:", permError);
+
         return false;
       }
 
       await avatar.current.startVoiceChat();
       setIsVoiceChatActive(true);
       console.log("✅ Voice chat activated");
+
       return true;
     } catch (error) {
       console.error("❌ Error starting voice chat:", error);
       setIsVoiceChatActive(false);
+
       return false;
     }
   }
@@ -115,7 +134,7 @@ export default function InteractiveAvatarUta() {
       if (avatar.current) {
         await avatar.current.closeVoiceChat();
       }
-      
+
       setIsVoiceChatActive(false);
       setIsUserTalking(false);
       setLastTranscript("");
@@ -136,14 +155,14 @@ export default function InteractiveAvatarUta() {
     avatar.current.on(StreamingEvents.AVATAR_START_TALKING, (e) => {
       setIsAvatarTalking(true);
     });
-    
+
     avatar.current.on(StreamingEvents.AVATAR_STOP_TALKING, (e) => {
       setIsAvatarTalking(false);
-      
+
       // Add complete avatar message to history when it finishes talking
       if (currentAvatarMessage.current.trim()) {
         console.log("🤖 Avatar response:", currentAvatarMessage.current.trim());
-        addToHistory('avatar', currentAvatarMessage.current.trim());
+        addToHistory("avatar", currentAvatarMessage.current.trim());
         currentAvatarMessage.current = "";
       }
     });
@@ -152,23 +171,26 @@ export default function InteractiveAvatarUta() {
     avatar.current.on(StreamingEvents.AVATAR_TALKING_MESSAGE, (event) => {
       if (event.detail && event.detail.message) {
         const now = Date.now();
-        
+
         // If more than 3 seconds have passed since last chunk, start new message
-        if (now - lastMessageTime.current > 3000 && currentAvatarMessage.current.trim()) {
-          addToHistory('avatar', currentAvatarMessage.current.trim());
+        if (
+          now - lastMessageTime.current > 3000 &&
+          currentAvatarMessage.current.trim()
+        ) {
+          addToHistory("avatar", currentAvatarMessage.current.trim());
           currentAvatarMessage.current = "";
         }
-        
+
         currentAvatarMessage.current += event.detail.message;
         lastMessageTime.current = now;
       }
     });
-    
+
     avatar.current.on(StreamingEvents.STREAM_DISCONNECTED, () => {
       console.log("Stream disconnected");
       endSession();
     });
-    
+
     avatar.current.on(StreamingEvents.STREAM_READY, (event) => {
       console.log("Stream ready:", event.detail);
       setStream(event.detail);
@@ -176,38 +198,40 @@ export default function InteractiveAvatarUta() {
 
     // User talking events
     avatar.current.on(StreamingEvents.USER_TALKING_MESSAGE, (event) => {
-      const message = event.detail?.message || event.detail?.text || event.detail?.transcript;
-      
+      const message =
+        event.detail?.message || event.detail?.text || event.detail?.transcript;
+
       if (message) {
-        console.log('👤 USER_TALKING_MESSAGE:', message);
+        console.log("👤 USER_TALKING_MESSAGE:", message);
         setIsUserTalking(true);
         setLastTranscript(message);
         currentUserMessage.current = message; // Store for later use
       } else {
-        console.log('⚠️ USER_TALKING_MESSAGE - no content');
+        console.log("⚠️ USER_TALKING_MESSAGE - no content");
       }
     });
 
     avatar.current.on(StreamingEvents.USER_END_MESSAGE, (event) => {
-      console.log('📝 USER_END_MESSAGE triggered');
+      console.log("📝 USER_END_MESSAGE triggered");
       setIsUserTalking(false);
-      
+
       // Use the message stored from USER_TALKING_MESSAGE
       if (currentUserMessage.current.trim()) {
-        console.log('👤 USER_MESSAGE_FINAL:', currentUserMessage.current);
-        addToHistory('user', currentUserMessage.current);
-        console.log('✅ Added to history');
+        console.log("👤 USER_MESSAGE_FINAL:", currentUserMessage.current);
+        addToHistory("user", currentUserMessage.current);
+        console.log("✅ Added to history");
         currentUserMessage.current = ""; // Clear after use
       } else {
-        console.log('⚠️ No user message to add to history');
+        console.log("⚠️ No user message to add to history");
       }
     });
 
     avatar.current.on(StreamingEvents.USER_START, (event) => {
       const now = Date.now();
+
       // Only log if it's been more than 500ms since last start (avoid spam)
       if (now - lastUserStartTime.current > 500) {
-        console.log('🎤 USER_START');
+        console.log("🎤 USER_START");
       }
       lastUserStartTime.current = now;
       setIsUserTalking(true);
@@ -222,40 +246,43 @@ export default function InteractiveAvatarUta() {
       const res = await avatar.current.createStartAvatar({
         quality: AvatarQuality.Low,
         avatarName: avatarId,
-        knowledgeId: knowledgeId, 
+        knowledgeId: knowledgeId,
         voice: {
           voiceId: voiceId,
           rate: 1.0,
           emotion: VoiceEmotion.FRIENDLY,
         },
         language: language,
-        disableIdleTimeout: false
+        disableIdleTimeout: false,
       });
 
       setData(res);
       console.log("✅ Avatar session created:", res);
-      
+
       // Start voice chat automatically if in voice mode
-      if (chatMode === 'voice_mode') {
+      if (chatMode === "voice_mode") {
         console.log("🎤 Auto-starting voice chat for voice mode...");
         const voiceChatStarted = await startVoiceChat();
+
         if (!voiceChatStarted) {
-          console.log("⚠️ Voice chat failed to start, but continuing with session");
+          console.log(
+            "⚠️ Voice chat failed to start, but continuing with session",
+          );
         }
       }
-      
+
       // Welcome message using REPEAT to avoid knowledge base interference
-      const welcomeMessage = "¡Hola! Soy Tara, tu asistente virtual de la Universidad de Tarapacá. Es un gusto conocerte. Estoy aquí para apoyarte en tu formación académica y resolver cualquier consulta que tengas sobre nuestros programas, servicios universitarios y vida estudiantil. ¿En qué puedo ayudarte hoy?";
-      
+      const welcomeMessage =
+        "¡Hola! Soy Tara, tu asistente virtual de la Universidad de Tarapacá. Es un gusto conocerte. Estoy aquí para apoyarte en tu formación académica y resolver cualquier consulta que tengas sobre nuestros programas, servicios universitarios y vida estudiantil. ¿En qué puedo ayudarte hoy?";
+
       await avatar.current.speak({
         text: welcomeMessage,
         taskType: TaskType.REPEAT,
-        taskMode: TaskMode.SYNC
+        taskMode: TaskMode.SYNC,
       });
-      
+
       // Add welcome message to history manually (since REPEAT doesn't trigger talking events)
-      addToHistory('avatar', welcomeMessage);
-      
+      addToHistory("avatar", welcomeMessage);
     } catch (error) {
       console.error("Error starting avatar session:", error);
       setDebug(`Session error: ${error}`);
@@ -268,19 +295,20 @@ export default function InteractiveAvatarUta() {
     setIsLoadingRepeat(true);
     if (!avatar.current) {
       setDebug("Avatar API not initialized");
+
       return;
     }
-    
+
     const userMessage = text;
-    
+
     try {
       // Add user message to history first
-      addToHistory('user', userMessage);
-      
-      await avatar.current.speak({ 
-        text: userMessage, 
-        taskType: TaskType.TALK, 
-        taskMode: TaskMode.SYNC 
+      addToHistory("user", userMessage);
+
+      await avatar.current.speak({
+        text: userMessage,
+        taskType: TaskType.TALK,
+        taskMode: TaskMode.SYNC,
       });
       setText(""); // Clear input after sending
     } catch (e: any) {
@@ -294,6 +322,7 @@ export default function InteractiveAvatarUta() {
   async function handleInterrupt() {
     if (!avatar.current) {
       setDebug("Avatar API not initialized");
+
       return;
     }
     try {
@@ -328,9 +357,9 @@ export default function InteractiveAvatarUta() {
       return;
     }
     console.log(`Changing mode from ${chatMode} to ${v}`);
-    
+
     setChatMode(v);
-    
+
     if (v === "text_mode") {
       if (isVoiceChatActive) {
         await stopVoiceChat();
@@ -379,10 +408,10 @@ export default function InteractiveAvatarUta() {
               <div className="flex flex-col gap-1 absolute bottom-2 right-2">
                 <Button
                   className="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
+                  disabled={!isAvatarTalking}
                   size="sm"
                   variant="shadow"
                   onClick={handleInterrupt}
-                  disabled={!isAvatarTalking}
                 >
                   Interrumpir
                 </Button>
@@ -398,45 +427,48 @@ export default function InteractiveAvatarUta() {
 
               {/* Conversation Status Component */}
               <ConversationStatus
-                isVoiceChatActive={isVoiceChatActive}
-                isUserTalking={isUserTalking}
+                chatMode={chatMode}
                 isAvatarTalking={isAvatarTalking}
                 isProcessing={isProcessing}
+                isUserTalking={isUserTalking}
+                isVoiceChatActive={isVoiceChatActive}
                 lastTranscript={lastTranscript}
-                chatMode={chatMode}
                 mode="overlay"
               />
-              
-
             </div>
           ) : !isLoadingSession ? (
             <div className="h-full justify-center items-center flex flex-col gap-3 w-[400px] self-center">
               <div className="text-center">
-                <h2 className="text-lg font-bold text-blue-800 mb-1">🎓 Asistente Virtual UTA</h2>
+                <h2 className="text-lg font-bold text-blue-800 mb-1">
+                  🎓 Asistente Virtual UTA
+                </h2>
                 <p className="text-blue-600 text-xs">Universidad de Tarapacá</p>
-                <div className="w-full h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full mt-1"></div>
+                <div className="w-full h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full mt-1" />
               </div>
-              
+
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-2 relative">
                   <Image
-                    src="/tara_pic.png"
                     alt="Tara - Asistente Virtual UTA"
-                    width={80}
-                    height={80}
                     className="rounded-full object-cover border-3 shadow-lg"
+                    height={80}
+                    src="/tara_pic.png"
                     style={{
                       width: "120%",
                       height: "120%",
                     }}
+                    width={80}
                   />
                 </div>
-                <h3 className="text-base font-bold text-blue-800 mb-1">Conoce a Tara</h3>
+                <h3 className="text-base font-bold text-blue-800 mb-1">
+                  Conoce a Tara
+                </h3>
                 <p className="text-blue-600 text-xs leading-relaxed max-w-xs mx-auto">
-                  Tu asistente virtual especializada en información académica de la Universidad de Tarapacá.
+                  Tu asistente virtual especializada en información académica de
+                  la Universidad de Tarapacá.
                 </p>
               </div>
-              
+
               <Button
                 className="bg-gradient-to-tr from-blue-600 to-indigo-600 w-full text-white font-semibold text-base py-4 shadow-lg hover:shadow-xl transition-all"
                 size="md"
@@ -449,7 +481,9 @@ export default function InteractiveAvatarUta() {
           ) : (
             <div className="flex flex-col items-center gap-2">
               <Spinner color="primary" size="md" />
-              <p className="text-blue-600 font-medium text-sm">Conectando con Tara...</p>
+              <p className="text-blue-600 font-medium text-sm">
+                Conectando con Tara...
+              </p>
             </div>
           )}
         </CardBody>
@@ -463,23 +497,23 @@ export default function InteractiveAvatarUta() {
                 <span className="text-xs font-medium text-gray-700">Modo:</span>
                 <div className="flex">
                   <button
-                    onClick={() => handleChangeChatMode("voice_mode")}
                     className={`py-1 px-2 text-xs font-medium rounded-l-md border transition-colors ${
                       chatMode === "voice_mode"
                         ? "bg-blue-600 text-white border-blue-600"
                         : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                     }`}
                     disabled={!stream}
+                    onClick={() => handleChangeChatMode("voice_mode")}
                   >
                     🎤
                   </button>
                   <button
-                    onClick={() => handleChangeChatMode("text_mode")}
                     className={`py-1 px-2 text-xs font-medium rounded-r-md border-l-0 border transition-colors ${
                       chatMode === "text_mode"
                         ? "bg-blue-600 text-white border-blue-600"
                         : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                     }`}
+                    onClick={() => handleChangeChatMode("text_mode")}
                   >
                     💬
                   </button>
@@ -488,19 +522,29 @@ export default function InteractiveAvatarUta() {
 
               {/* Status indicator - Compact */}
               <div className="flex items-center gap-2">
-                <div className={`w-2.5 h-2.5 rounded-full ${
-                  isUserTalking ? 'bg-red-500 animate-pulse' :
-                  isAvatarTalking ? 'bg-blue-500 animate-pulse' :
-                  isProcessing ? 'bg-yellow-500 animate-pulse' :
-                  stream ? 'bg-green-500' :
-                  'bg-gray-300'
-                }`}></div>
+                <div
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    isUserTalking
+                      ? "bg-red-500 animate-pulse"
+                      : isAvatarTalking
+                        ? "bg-blue-500 animate-pulse"
+                        : isProcessing
+                          ? "bg-yellow-500 animate-pulse"
+                          : stream
+                            ? "bg-green-500"
+                            : "bg-gray-300"
+                  }`}
+                />
                 <span className="text-xs text-gray-600 font-medium">
-                  {isUserTalking ? 'Hablando' :
-                   isAvatarTalking ? 'Tara responde' :
-                   isProcessing ? 'Procesando' :
-                   stream ? 'Activa' :
-                   'Conectando'}
+                  {isUserTalking
+                    ? "Hablando"
+                    : isAvatarTalking
+                      ? "Tara responde"
+                      : isProcessing
+                        ? "Procesando"
+                        : stream
+                          ? "Activa"
+                          : "Conectando"}
                 </span>
               </div>
             </div>
@@ -520,27 +564,26 @@ export default function InteractiveAvatarUta() {
               />
             </div>
           )}
-          
 
-          
           {/* Conversation History - Full width with dynamic height */}
           <div className="flex-1 flex flex-col min-h-0">
             {conversationHistory.length > 0 ? (
-              <ConversationHistory 
-                messages={[...conversationHistory].reverse()}
+              <ConversationHistory
                 className="w-full flex-1"
                 dynamicHeight={true}
+                messages={[...conversationHistory].reverse()}
               />
             ) : (
               stream && (
                 <div className="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-4 text-center flex-1 flex flex-col justify-center">
                   <div className="text-xl mb-2">💭</div>
-                  <p className="text-sm text-gray-600 mb-1">No hay conversación aún</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    No hay conversación aún
+                  </p>
                   <p className="text-xs text-gray-500">
-                    {chatMode === 'voice_mode' 
-                      ? 'Habla con Tara usando tu micrófono'
-                      : 'Escribe una pregunta para comenzar'
-                    }
+                    {chatMode === "voice_mode"
+                      ? "Habla con Tara usando tu micrófono"
+                      : "Escribe una pregunta para comenzar"}
                   </p>
                 </div>
               )
@@ -550,4 +593,4 @@ export default function InteractiveAvatarUta() {
       </Card>
     </div>
   );
-} 
+}

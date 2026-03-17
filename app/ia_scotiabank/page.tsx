@@ -1,7 +1,6 @@
 "use client";
 
 import InteractiveAvatarGP from "@/components/InteractiveAvatar_GP";
-import Image from "next/image";
 
 export default function ScotiabankIA() {
   return (
@@ -12,20 +11,22 @@ export default function ScotiabankIA() {
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-4">
               <img
-                src="/scotiabank-logo-red.svg"
                 alt="Logo Scotiabank"
                 className="h-12 w-auto object-contain"
+                src="/scotiabank-logo-red.svg"
               />
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">
                   Scotiabank
                 </h1>
-                <p className="text-gray-600 text-sm">Asistente Virtual Inteligente</p>
+                <p className="text-gray-600 text-sm">
+                  Asistente Virtual Inteligente
+                </p>
               </div>
             </div>
           </div>
         </div>
-        <div className="h-1 bg-gradient-to-r from-red-400 via-red-300 to-red-400"></div>
+        <div className="h-1 bg-gradient-to-r from-red-400 via-red-300 to-red-400" />
       </header>
 
       {/* Contenido principal */}
@@ -33,19 +34,19 @@ export default function ScotiabankIA() {
         {/* Componente principal del avatar */}
         <div className="bg-white rounded-xl shadow-xl border border-red-200 overflow-hidden w-full max-w-4xl h-full flex flex-col mx-auto">
           <InteractiveAvatarGP
-            knowledgeId="974ba4ab9b80424babe5c757ea50167e"
             avatarId="Silas_CustomerSupport_public"
-            voiceId="05e192129b6b466493886273f8c23f78"
-            language="es"
-            avatarName="Fabián"
-            institutionName="Scotiabank"
             avatarImage="/fabian_pic.png"
-            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual de Scotiabank. Es un gusto conocerte. Estoy aquí para ayudarte con tus preguntas financieras."
+            avatarName="Fabián"
+            backgroundColor="red"
+            buttonText="🚀 Iniciar Conversación con Fabián"
+            institutionName="Scotiabank"
+            knowledgeId="974ba4ab9b80424babe5c757ea50167e"
+            language="es"
+            placeholderText="¿Qué quieres saber sobre Scotiabank?..."
             primaryColor="red"
             secondaryColor="rose"
-            backgroundColor="red"
-            placeholderText="¿Qué quieres saber sobre Scotiabank?..."
-            buttonText="🚀 Iniciar Conversación con Fabián"
+            voiceId="05e192129b6b466493886273f8c23f78"
+            welcomeMessage="¡Hola! Soy Fabián, tu asistente virtual de Scotiabank. Es un gusto conocerte. Estoy aquí para ayudarte con tus preguntas financieras."
           />
         </div>
       </main>

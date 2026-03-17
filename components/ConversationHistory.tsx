@@ -1,9 +1,9 @@
-import React from 'react';
+import React from "react";
 import { Card, CardBody, ScrollShadow } from "@nextui-org/react";
 
 export interface ConversationMessage {
   id: string;
-  type: 'user' | 'avatar';
+  type: "user" | "avatar";
   content: string;
   timestamp: Date;
 }
@@ -17,11 +17,15 @@ interface ConversationHistoryProps {
 export default function ConversationHistory({
   messages,
   className = "",
-  dynamicHeight = false
+  dynamicHeight = false,
 }: ConversationHistoryProps) {
   return (
-    <Card className={`border border-gray-200 ${dynamicHeight ? 'flex flex-col' : ''} ${className}`}>
-      <CardBody className={`p-0 ${dynamicHeight ? 'flex flex-col flex-1' : ''}`}>
+    <Card
+      className={`border border-gray-200 ${dynamicHeight ? "flex flex-col" : ""} ${className}`}
+    >
+      <CardBody
+        className={`p-0 ${dynamicHeight ? "flex flex-col flex-1" : ""}`}
+      >
         <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-3 border-b border-gray-200">
           <h4 className="text-sm font-semibold text-purple-700 flex items-center gap-2">
             📝 Historial
@@ -30,10 +34,10 @@ export default function ConversationHistory({
             </span>
           </h4>
         </div>
-        
-        <ScrollShadow 
-          className={`${dynamicHeight ? 'h-full' : 'h-48'} p-3`} 
+
+        <ScrollShadow
           hideScrollBar
+          className={`${dynamicHeight ? "h-full" : "h-48"} p-3`}
         >
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">
@@ -47,23 +51,23 @@ export default function ConversationHistory({
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
                     className={`max-w-[80%] p-2 rounded-lg text-xs ${
-                      message.type === 'user'
-                        ? 'bg-blue-500 text-white rounded-br-sm'
-                        : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+                      message.type === "user"
+                        ? "bg-blue-500 text-white rounded-br-sm"
+                        : "bg-gray-100 text-gray-800 rounded-bl-sm"
                     }`}
                   >
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-xs opacity-70">
-                        {message.type === 'user' ? '👤 Tú' : '🤖 Tara'}
+                        {message.type === "user" ? "👤 Tú" : "🤖 Tara"}
                       </span>
                       <span className="text-xs opacity-50">
-                        {message.timestamp.toLocaleTimeString('es-ES', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
+                        {message.timestamp.toLocaleTimeString("es-ES", {
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </span>
                     </div>
@@ -77,4 +81,4 @@ export default function ConversationHistory({
       </CardBody>
     </Card>
   );
-} 
+}
